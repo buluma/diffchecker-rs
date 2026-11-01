@@ -1,0 +1,24 @@
+[package]
+name = "diffchecker"
+version = "1.0.6"
+description = "A local text and code comparison tool"
+authors = ["Diffchecker maintainers"]
+edition = "2021"
+
+[lib]
+name = "diffchecker_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tokio = { version = "1", features = ["sync"] }
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,115 @@
+name: Desktop Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: macos
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-24.04
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - if: matrix.platform == 'macos'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libwebkit2gtk-4.1-dev
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check release tag matches all app versions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          bun -e 'const tag = process.env.RELEASE_TAG; const pkg = await Bun.file("package.json").json(); const conf = await Bun.file("src-tauri/tauri.conf.json").json(); const cargo = await Bun.file("src-tauri/Cargo.toml").text(); const cargoVersion = cargo.match(/^version = "([^"]+)"/m)?.[1]; if (tag !== "v" + pkg.version || conf.version !== pkg.version || cargoVersion !== pkg.version) { console.error("Release tag, package.json, Cargo.toml, and tauri.conf.json versions must match"); process.exit(1); }'
+
+      - name: Build universal macOS installers
+        if: matrix.platform == 'macos'
+        run: |
+          bunx tauri build --target universal-apple-darwin --bundles app
+          mkdir -p release
+          app_path="$(find "$PWD/src-tauri/target/universal-apple-darwin/release/bundle/macos" -maxdepth 1 -name '*.app' -print -quit)"
+          ditto -c -k --sequesterRsrc --keepParent "$app_path" release/Diffchecker-macOS-universal.zip
+          bunx tauri build --target universal-apple-darwin --bundles dmg
+          find src-tauri/target/universal-apple-darwin/release/bundle/dmg -maxdepth 1 -name '*.dmg' -exec cp {} release/ \;
+
+      - name: Build Windows installer
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          bunx tauri build --bundles nsis
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item src-tauri/target/release/bundle/nsis/*.exe release/
+
+      - name: Build Linux packages
+        if: matrix.platform == 'linux'
+        run: |
+          bunx tauri build --bundles appimage,deb
+          mkdir -p release
+          find src-tauri/target/release/bundle/appimage -maxdepth 1 -name '*.AppImage' -exec cp {} release/ \;
+          find src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -exec cp {} release/ \;
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: installers-${{ matrix.platform }}
+          path: release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub Release
+    needs: package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: installers-*
+          path: release
+          merge-multiple: true
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release/* --title "$RELEASE_TAG" --generate-notes
+          fi
