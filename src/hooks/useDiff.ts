@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { DiffResult, DiffOptions, FileContent } from '../types/diff';
-import { computeDiff, filterDiffLines } from '../utils/diff';
+import { filterDiffLines } from '../utils/diff';
 import { detectLanguageFromPath, detectLanguageFromContent } from '../utils/language';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
 import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
 import { getDesktopAPI } from '../platform/desktop';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export function useDiff() {
   const [originalFile, setOriginalFile] = useState<FileContent>({
@@ -36,8 +37,8 @@ export function useDiff() {
     // Use requestIdleCallback or setTimeout to avoid blocking UI
     // The first diff runs immediately; recomputes wait a beat so typing doesn't diff on every keystroke
     const delay = hasResultRef.current ? 150 : 0;
-    let worker: Worker | null = null;
-    const timeoutId = setTimeout(() => {
+    let cancelled = false;
+    const timeoutId = setTimeout(async () => {
       if (!isComparing || (!originalFile.content && !changedFile.content)) {
         hasResultRef.current = false;
         setDiffResult(null);
@@ -52,7 +53,7 @@ export function useDiff() {
       const requestId = ++requestIdRef.current;
 
       const finish = (result?: DiffResult, error?: string) => {
-        if (requestId !== requestIdRef.current) return;
+        if (cancelled || requestId !== requestIdRef.current) return;
         if (result) {
           hasResultRef.current = true;
           setDiffResult(result);
@@ -65,36 +66,29 @@ export function useDiff() {
         setIsComputing(false);
       };
 
-      // Vitest and older embedded browsers may not provide workers; production uses the worker path.
-      if (typeof Worker === 'undefined') {
-        try {
-          finish(computeDiff(originalFile.content, changedFile.content, options));
-        } catch (error) {
-          finish(undefined, error instanceof Error ? error.message : undefined);
-        }
-        return;
-      }
-
       try {
-        worker = new Worker(new URL('../workers/diff.worker.ts', import.meta.url), { type: 'module' });
-        worker.onmessage = (event: MessageEvent<{ requestId: number; result?: DiffResult; error?: string }>) => {
-          if (event.data.requestId === requestId) finish(event.data.result, event.data.error);
-        };
-        worker.onerror = () => finish(undefined, 'The comparison worker failed. Try smaller inputs.');
-        worker.postMessage({
-          requestId,
-          original: originalFile.content,
-          changed: changedFile.content,
-          options,
-        });
-      } catch {
-        finish(undefined, 'The comparison worker could not start. Try reloading the app.');
+        let result: DiffResult;
+        if (isTauri()) {
+          // Use Rust backend via Tauri
+          result = await invoke('compute_diff_cmd', {
+            original: originalFile.content,
+            changed: changedFile.content,
+            options,
+          });
+        } else {
+          // Fallback for web - use TypeScript implementation
+          const { computeDiff } = await import('../utils/diff');
+          result = computeDiff(originalFile.content, changedFile.content, options);
+        }
+        if (!cancelled) finish(result);
+      } catch (error) {
+        if (!cancelled) finish(undefined, error instanceof Error ? error.message : 'The comparison could not be completed.');
       }
     }, delay);
 
     return () => {
+      cancelled = true;
       clearTimeout(timeoutId);
-      worker?.terminate();
     };
   }, [isComparing, originalFile.content, changedFile.content, options]);
 

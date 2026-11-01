@@ -1,4 +1,7 @@
 mod store;
+mod diff;
+mod highlight;
+mod types;
 
 use std::path::PathBuf;
 use std::{fmt, io};
@@ -14,6 +17,9 @@ use crate::store::{
     set_save_history as write_save_history, HistoryAddResult, HistoryEntry, HistorySide,
     RecentFile, MAX_OPEN_BYTES,
 };
+use crate::diff::compute_diff;
+use crate::highlight::highlight_code;
+use crate::types::{DiffOptions, DiffResult};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -197,6 +203,23 @@ fn set_save_history(app: AppHandle, enabled: bool) -> Result<bool, String> {
     write_save_history(&app_data_dir(&app)?, enabled)
 }
 
+#[tauri::command]
+async fn compute_diff_cmd(
+    original: String,
+    changed: String,
+    options: DiffOptions,
+) -> Result<DiffResult, String> {
+    compute_diff(&original, &changed, &options).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn highlight_code_cmd(
+    code: String,
+    language: String,
+) -> Result<String, String> {
+    highlight_code(&code, &language)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -212,6 +235,8 @@ pub fn run() {
             clear_history,
             get_save_history,
             set_save_history,
+            compute_diff_cmd,
+            highlight_code_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Diffchecker");

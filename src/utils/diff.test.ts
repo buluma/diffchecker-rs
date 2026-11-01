@@ -149,7 +149,7 @@ describe('computeDiff', () => {
 
     expect(result.lines).toHaveLength(1);
     expect(result.lines[0]).toMatchObject({ type: 'modified', originalContent: `${long}a` });
-    expect(result.lines[0].charDiffs).toBeUndefined();
+    expect(result.lines[0].charDiffs).toBeNull();
   });
 
   it('recognizes lines as equal after ignored normalization', () => {
