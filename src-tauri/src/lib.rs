@@ -1,8 +1,12 @@
 mod store;
 mod diff;
 mod highlight;
+mod language;
+mod merge;
+mod markers;
 mod types;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{fmt, io};
 
@@ -10,6 +14,12 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 
+use crate::diff::compute_diff;
+use crate::highlight::highlight_code;
+use crate::language::{detect_language_from_content, detect_language_from_path};
+use crate::merge::{build_merged_content, MergeChoice};
+use crate::markers::{compute_group_positions, to_markers, ChangeMarker, GroupPosition, MarkerKind};
+use crate::types::{DiffLine, DiffOptions, DiffResult, DiffViewMode};
 use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
     get_save_history as read_save_history, list_history as read_history_entries,
@@ -17,9 +27,6 @@ use crate::store::{
     set_save_history as write_save_history, HistoryAddResult, HistoryEntry, HistorySide,
     RecentFile, MAX_OPEN_BYTES,
 };
-use crate::diff::compute_diff;
-use crate::highlight::highlight_code;
-use crate::types::{DiffOptions, DiffResult};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -220,6 +227,39 @@ async fn highlight_code_cmd(
     highlight_code(&code, &language)
 }
 
+#[tauri::command]
+async fn detect_language_cmd(
+    path: Option<String>,
+    content: String,
+) -> Result<String, String> {
+    let lang = if let Some(path) = path {
+        detect_language_from_path(Some(&path))
+    } else {
+        detect_language_from_content(&content)
+    };
+    Ok(lang)
+}
+
+#[tauri::command]
+async fn build_merged_content_cmd(
+    lines: Vec<DiffLine>,
+    choices: HashMap<usize, MergeChoice>,
+) -> Result<String, String> {
+    Ok(build_merged_content(&lines, &choices))
+}
+
+#[tauri::command]
+async fn compute_markers_cmd(
+    lines: Vec<DiffLine>,
+    view_mode: DiffViewMode,
+    wrap_lines: bool,
+    scroll_height: f64,
+) -> Result<Vec<ChangeMarker>, String> {
+    const LINE_HEIGHT: f64 = 20.0;
+    let groups = compute_group_positions(&lines, LINE_HEIGHT, view_mode, wrap_lines);
+    Ok(to_markers(&groups, scroll_height))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -237,6 +277,9 @@ pub fn run() {
             set_save_history,
             compute_diff_cmd,
             highlight_code_cmd,
+            detect_language_cmd,
+            build_merged_content_cmd,
+            compute_markers_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Diffchecker");
