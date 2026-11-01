@@ -1,4 +1,4 @@
-import type { DiffLine, DiffResult, DiffOptions, CharDiff } from '../types/diff';
+import type { DiffLine, DiffResult, DiffOptions, CharDiff, DiffType } from '../types/diff';
 import { MAX_INPUT_LINES, getInputLimitError } from './limits';
 
 /**
@@ -362,29 +362,38 @@ export function computeDiff(originalText: string, changedText: string, options: 
   
   const stats = { added: 0, removed: 0, modified: 0, unchanged: 0 };
   
+  const makeLine = (
+    type: DiffType,
+    originalLineNumber: number | null,
+    changedLineNumber: number | null,
+    content: string,
+    originalContent: string | null = null,
+    changedContent: string | null = null,
+    charDiffs: CharDiff[] | null = null,
+  ): DiffLine => ({
+    type,
+    originalLineNumber,
+    changedLineNumber,
+    content,
+    originalContent,
+    changedContent,
+    charDiffs,
+  });
+  
   const buildModifiedLine = (
     origContent: string,
     changedContent: string,
     originalLineNumber: number,
     changedLineNumber: number,
   ): DiffLine => {
-    const line: DiffLine = {
-      type: 'modified',
-      originalLineNumber,
-      changedLineNumber,
-      content: changedContent,
-      originalContent: origContent,
-      changedContent,
-    };
-
+    let charDiffs: CharDiff[] | null = null;
     if (origContent.length * changedContent.length <= MAX_INLINE_DIFF_CELLS) {
       const precision = determinePrecision(origContent, changedContent, options);
-      line.charDiffs = precision === 'character'
+      charDiffs = precision === 'character'
         ? computeCharDiff(origContent, changedContent, options)
         : computeWordDiff(origContent, changedContent, options);
     }
-
-    return line;
+    return makeLine('modified', originalLineNumber, changedLineNumber, changedContent, origContent, changedContent, charDiffs);
   };
 
   // Picks which lines in a gap between two matches to show as modified pairs: an in-order
@@ -409,12 +418,7 @@ export function computeDiff(originalText: string, changedText: string, options: 
 
   const emitRemovedUntil = (end: number) => {
     while (origIdx < end) {
-      lines.push({
-        type: 'removed',
-        originalLineNumber: origLineNum,
-        changedLineNumber: null,
-        content: originalLines[origIdx],
-      });
+      lines.push(makeLine('removed', origLineNum, null, originalLines[origIdx]));
       stats.removed++;
       origIdx++;
       origLineNum++;
@@ -423,12 +427,7 @@ export function computeDiff(originalText: string, changedText: string, options: 
 
   const emitAddedUntil = (end: number) => {
     while (changedIdx < end) {
-      lines.push({
-        type: 'added',
-        originalLineNumber: null,
-        changedLineNumber: changedLineNum,
-        content: changedLines[changedIdx],
-      });
+      lines.push(makeLine('added', null, changedLineNum, changedLines[changedIdx]));
       stats.added++;
       changedIdx++;
       changedLineNum++;
@@ -458,12 +457,7 @@ export function computeDiff(originalText: string, changedText: string, options: 
     emitGap(origPos, changedPos);
     
     // The LCS only matches lines that are equal after normalization
-    lines.push({
-      type: 'equal',
-      originalLineNumber: origLineNum,
-      changedLineNumber: changedLineNum,
-      content: originalLines[origIdx],
-    });
+    lines.push(makeLine('equal', origLineNum, changedLineNum, originalLines[origIdx]));
     stats.unchanged++;
     origIdx++;
     changedIdx++;
@@ -473,7 +467,7 @@ export function computeDiff(originalText: string, changedText: string, options: 
   
   emitGap(originalLines.length, changedLines.length);
   
-  return warning ? { lines, stats, warning } : { lines, stats };
+  return { lines, stats, warning: warning ?? null };
 }
 
 /**

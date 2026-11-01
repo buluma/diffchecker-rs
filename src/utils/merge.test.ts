@@ -21,7 +21,7 @@ describe('buildMergedContent', () => {
 
   it('retains choices across multiple changed lines', () => {
     const lines: DiffLine[] = [
-      { type: 'equal', originalLineNumber: 1, changedLineNumber: 1, content: 'keep' },
+      { type: 'equal', originalLineNumber: 1, changedLineNumber: 1, content: 'keep', originalContent: null, changedContent: null, charDiffs: null },
       {
         type: 'modified',
         originalLineNumber: 2,
@@ -29,6 +29,7 @@ describe('buildMergedContent', () => {
         content: 'new',
         originalContent: 'old',
         changedContent: 'new',
+        charDiffs: null,
       },
       {
         type: 'modified',
@@ -37,6 +38,7 @@ describe('buildMergedContent', () => {
         content: 'updated',
         originalContent: 'stale',
         changedContent: 'updated',
+        charDiffs: null,
       },
     ];
 
