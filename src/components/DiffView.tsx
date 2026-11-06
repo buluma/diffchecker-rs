@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import type { DiffLine, DiffOptions } from '../types/diff';
 import { highlightCode } from '../utils/highlight';
 import { groupKind, toMarkers, type ChangeMarker } from '../utils/markers';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 
 interface DiffViewProps {
   lines: DiffLine[];
@@ -139,6 +140,8 @@ export function DiffView({
   useLayoutEffect(() => {
     const pane = activePane();
     if (!pane) return;
+    let request = 0;
+    let disposed = false;
 
     const measure = () => {
       const paneTop = pane.getBoundingClientRect().top;
@@ -148,20 +151,30 @@ export function DiffView({
         if (!element) return [];
         const rect = element.getBoundingClientRect();
         return [{
-          kind: groupKind(group.lines.map(line => line.type)),
+          types: group.lines.map(line => line.type),
           top: rect.top - paneTop + pane.scrollTop,
           height: rect.height,
         }];
       });
-      setMarkers(toMarkers(positions, pane.scrollHeight));
+      const current = ++request;
+      const fallback = () => toMarkers(positions.map(({ types, ...position }) => ({
+        ...position, kind: groupKind(types),
+      })), pane.scrollHeight);
+      if (!isTauri()) {
+        setMarkers(fallback());
+      } else {
+        void invoke<ChangeMarker[]>('compute_markers_cmd', { groups: positions, scrollHeight: pane.scrollHeight })
+          .catch(fallback)
+          .then(result => { if (!disposed && current === request) setMarkers(result); });
+      }
     };
 
     measure();
     // Wrapping depends on the width, so re-measure when the pane is resized
-    if (typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === 'undefined') return () => { disposed = true; };
     const observer = new ResizeObserver(measure);
     observer.observe(pane);
-    return () => observer.disconnect();
+    return () => { disposed = true; observer.disconnect(); };
   }, [activePane, groupedLines, expandedRanges, options.hideUnchangedLines, options.wrapLines]);
 
   const renderLineContent = (line: DiffLine, language: string, side: 'original' | 'changed') => {

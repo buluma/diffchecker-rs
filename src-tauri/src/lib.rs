@@ -17,7 +17,7 @@ use tauri_plugin_dialog::DialogExt;
 use crate::diff::compute_diff;
 use crate::highlight::highlight_code;
 use crate::language::{detect_language_from_content, detect_language_from_path};
-use crate::markers::{compute_group_positions, to_markers, ChangeMarker};
+use crate::markers::{group_kind, to_markers, ChangeMarker, GroupPosition};
 use crate::merge::{build_merged_content, MergeChoice};
 use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
@@ -26,7 +26,7 @@ use crate::store::{
     set_save_history as write_save_history, HistoryAddResult, HistoryEntry, HistorySide,
     RecentFile, MAX_OPEN_BYTES,
 };
-use crate::types::{DiffLine, DiffOptions, DiffResult, DiffViewMode};
+use crate::types::{DiffLine, DiffOptions, DiffResult, DiffType};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -242,15 +242,26 @@ async fn build_merged_content_cmd(
     Ok(build_merged_content(&lines, &choices))
 }
 
+#[derive(serde::Deserialize)]
+struct MeasuredGroup {
+    types: Vec<DiffType>,
+    top: f64,
+    height: f64,
+}
+
 #[tauri::command]
 async fn compute_markers_cmd(
-    lines: Vec<DiffLine>,
-    view_mode: DiffViewMode,
-    wrap_lines: bool,
+    groups: Vec<MeasuredGroup>,
     scroll_height: f64,
 ) -> Result<Vec<ChangeMarker>, String> {
-    const LINE_HEIGHT: f64 = 20.0;
-    let groups = compute_group_positions(&lines, LINE_HEIGHT, view_mode, wrap_lines);
+    let groups: Vec<GroupPosition> = groups
+        .into_iter()
+        .map(|group| GroupPosition {
+            kind: group_kind(&group.types),
+            top: group.top,
+            height: group.height,
+        })
+        .collect();
     Ok(to_markers(&groups, scroll_height))
 }
 
