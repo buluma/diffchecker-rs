@@ -29,6 +29,8 @@ function installApi(overrides: Partial<Api> = {}) {
     clearHistory: vi.fn().mockResolvedValue([]),
     getSaveHistory: vi.fn().mockResolvedValue(true),
     setSaveHistory: vi.fn().mockImplementation(async (enabled: boolean) => enabled),
+    detectLanguage: vi.fn().mockResolvedValue('plaintext'),
+    buildMergedContent: vi.fn().mockResolvedValue(''),
     ...overrides,
   } satisfies Api;
   window.desktopAPI = api;
