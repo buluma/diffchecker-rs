@@ -7,6 +7,13 @@ import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
 import { getDesktopAPI } from '../platform/desktop';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
+async function detectLanguage(path: string | null, content: string): Promise<string> {
+  const api = getDesktopAPI();
+  return api ? api.detectLanguage(path, content) : path
+    ? detectLanguageFromPath(path)
+    : detectLanguageFromContent(content);
+}
+
 export function useDiff() {
   const [originalFile, setOriginalFile] = useState<FileContent>({
     path: null,
@@ -31,6 +38,7 @@ export function useDiff() {
   // Whether a diff is already showing, so later recomputes (typing in the editors under the diff) can be debounced
   const hasResultRef = useRef(false);
   const requestIdRef = useRef(0);
+  const languageRequestRef = useRef({ original: 0, changed: 0 });
 
   // Compute diff while comparing, and recompute when content or options change
   useEffect(() => {
@@ -97,7 +105,7 @@ export function useDiff() {
     return filterDiffLines(diffResult.lines, options);
   }, [diffResult, options]);
 
-  const updateOriginalContent = useCallback((content: string, path?: string) => {
+  const updateOriginalContent = useCallback(async (content: string, path?: string) => {
     const error = getInputLimitError(content);
     if (error) {
       setInputError(error);
@@ -105,15 +113,14 @@ export function useDiff() {
     }
     setInputError(null);
     setComparisonWarning(null);
-    setOriginalFile(prev => ({
-      ...prev,
-      content,
-      path: path ?? prev.path,
-      language: path ? detectLanguageFromPath(path) : detectLanguageFromContent(content),
-    }));
-  }, []);
+    const nextPath = path ?? originalFile.path;
+    const requestId = ++languageRequestRef.current.original;
+    const language = await detectLanguage(nextPath, content);
+    if (requestId !== languageRequestRef.current.original) return;
+    setOriginalFile(prev => ({ ...prev, content, path: nextPath, language }));
+  }, [originalFile.path]);
 
-  const updateChangedContent = useCallback((content: string, path?: string) => {
+  const updateChangedContent = useCallback(async (content: string, path?: string) => {
     const error = getInputLimitError(content);
     if (error) {
       setInputError(error);
@@ -121,13 +128,12 @@ export function useDiff() {
     }
     setInputError(null);
     setComparisonWarning(null);
-    setChangedFile(prev => ({
-      ...prev,
-      content,
-      path: path ?? prev.path,
-      language: path ? detectLanguageFromPath(path) : detectLanguageFromContent(content),
-    }));
-  }, []);
+    const nextPath = path ?? changedFile.path;
+    const requestId = ++languageRequestRef.current.changed;
+    const language = await detectLanguage(nextPath, content);
+    if (requestId !== languageRequestRef.current.changed) return;
+    setChangedFile(prev => ({ ...prev, content, path: nextPath, language }));
+  }, [changedFile.path]);
 
   const setOption = useCallback((updates: Partial<DiffOptions>) => {
     setOptions(prev => ({ ...prev, ...updates }));
@@ -144,18 +150,20 @@ export function useDiff() {
 
   const compare = useCallback(() => setIsComparing(true), []);
 
-  const setSideFile = useCallback((side: 'original' | 'changed', file: { path: string | null; content: string }) => {
+  const setSideFile = useCallback(async (side: 'original' | 'changed', file: { path: string | null; content: string }) => {
     const error = getInputLimitError(file.content);
     if (error) {
       setInputError(error);
       return false;
     }
     setInputError(null);
+    const requestId = ++languageRequestRef.current[side];
     const value = {
       path: file.path,
       content: file.content,
-      language: file.path ? detectLanguageFromPath(file.path) : detectLanguageFromContent(file.content),
+      language: await detectLanguage(file.path, file.content),
     };
+    if (requestId !== languageRequestRef.current[side]) return false;
     if (side === 'original') {
       setOriginalFile(value);
     } else {
@@ -176,12 +184,11 @@ export function useDiff() {
   }, [setSideFile]);
 
   /** Loads both sides from a saved comparison and shows its diff */
-  const restoreComparison = useCallback((
+  const restoreComparison = useCallback(async (
     original: { path: string | null; content: string },
     changed: { path: string | null; content: string },
   ) => {
-    setSideFile('original', original);
-    setSideFile('changed', changed);
+    await Promise.all([setSideFile('original', original), setSideFile('changed', changed)]);
     setLanguageOverride(null);
     setInputError(null);
     setIsComparing(true);
@@ -218,7 +225,7 @@ export function useDiff() {
           return;
         }
         setInputError(null);
-        const language = detectLanguageFromPath(result.path);
+        const language = await detectLanguage(result.path, result.content);
         if (side === 'original') {
           setOriginalFile({ path: result.path, content: result.content, language });
         } else {
@@ -237,14 +244,14 @@ export function useDiff() {
             setInputError('Each input is limited to 5 MiB.');
             return;
           }
-          void file.text().then(content => {
+          void file.text().then(async content => {
             const error = getInputLimitError(content);
             if (error) {
               setInputError(error);
               return;
             }
             setInputError(null);
-            const language = detectLanguageFromPath(file.name);
+            const language = await detectLanguage(file.name, content);
             if (side === 'original') setOriginalFile({ path: file.name, content, language });
             else setChangedFile({ path: file.name, content, language });
           }).catch(() => setInputError(`Could not read ${file.name}.`));
