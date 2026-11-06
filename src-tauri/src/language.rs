@@ -1,4 +1,8 @@
 use phf::phf_map;
+<<<<<<< HEAD
+=======
+use std::collections::HashMap;
+>>>>>>> origin/master
 
 static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     // Web
@@ -12,12 +16,20 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "less" => "less",
     "json" => "json",
     "jsonc" => "json",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Python
     "py" => "python",
     "pyw" => "python",
     "pyi" => "python",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Java/JVM
     "java" => "java",
     "kt" => "kotlin",
@@ -25,7 +37,11 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "scala" => "scala",
     "groovy" => "groovy",
     "clj" => "clojure",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // C/C++
     "c" => "c",
     "h" => "c",
@@ -34,6 +50,7 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "cxx" => "cpp",
     "hpp" => "cpp",
     "hxx" => "cpp",
+<<<<<<< HEAD
 
     // C#
     "cs" => "csharp",
@@ -45,11 +62,25 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     // Rust
     "rs" => "rust",
 
+=======
+    
+    // C#
+    "cs" => "csharp",
+    "csx" => "csharp",
+    
+    // Go
+    "go" => "go",
+    
+    // Rust
+    "rs" => "rust",
+    
+>>>>>>> origin/master
     // Ruby
     "rb" => "ruby",
     "erb" => "ruby",
     "rake" => "ruby",
     "gemspec" => "ruby",
+<<<<<<< HEAD
 
     // PHP
     "php" => "php",
@@ -58,15 +89,32 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     // Swift
     "swift" => "swift",
 
+=======
+    
+    // PHP
+    "php" => "php",
+    "phtml" => "php",
+    
+    // Swift
+    "swift" => "swift",
+    
+>>>>>>> origin/master
     // Shell
     "sh" => "bash",
     "bash" => "bash",
     "zsh" => "bash",
     "fish" => "fish",
+<<<<<<< HEAD
 
     // SQL
     "sql" => "sql",
 
+=======
+    
+    // SQL
+    "sql" => "sql",
+    
+>>>>>>> origin/master
     // Data/Config
     "yaml" => "yaml",
     "yml" => "yaml",
@@ -78,18 +126,30 @@ static EXTENSION_LANGUAGE_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "cfg" => "ini",
     "conf" => "ini",
     "env" => "dotenv",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Documentation
     "md" => "markdown",
     "mdx" => "markdown",
     "rst" => "rst",
     "txt" => "plaintext",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Logs
     "log" => "plaintext",
     "out" => "plaintext",
     "err" => "plaintext",
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Other
     "dockerfile" => "dockerfile",
     "dockerignore" => "dockerfile",
@@ -133,7 +193,11 @@ pub fn detect_language_from_path(file_path: Option<&str>) -> String {
         Some(p) if !p.is_empty() => p,
         _ => return "plaintext".to_string(),
     };
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Get filename from path
     let filename = file_path
         .split('/')
@@ -142,11 +206,16 @@ pub fn detect_language_from_path(file_path: Option<&str>) -> String {
         .split('\\')
         .last()
         .unwrap_or(file_path);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // Check exact filename matches first
     if let Some(lang) = FILENAME_LANGUAGE_MAP.get(filename) {
         return lang.to_string();
     }
+<<<<<<< HEAD
 
     // Check extension
     let ext = filename.split('.').last().unwrap_or("").to_lowercase();
@@ -155,6 +224,20 @@ pub fn detect_language_from_path(file_path: Option<&str>) -> String {
         return lang.to_string();
     }
 
+=======
+    
+    // Check extension
+    let ext = filename
+        .split('.')
+        .last()
+        .unwrap_or("")
+        .to_lowercase();
+    
+    if let Some(lang) = EXTENSION_LANGUAGE_MAP.get(&ext) {
+        return lang.to_string();
+    }
+    
+>>>>>>> origin/master
     "plaintext".to_string()
 }
 
@@ -175,31 +258,53 @@ pub fn detect_language_from_content(content: &str) -> String {
             }
         }
     }
+<<<<<<< HEAD
 
     let trimmed = content.trim_start();
 
+=======
+    
+    let trimmed = content.trim_start();
+    
+>>>>>>> origin/master
     // XML declaration
     if trimmed.starts_with("<?xml") {
         return "xml".to_string();
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // HTML doctype
     if trimmed.to_lowercase().starts_with("<!doctype html") {
         return "html".to_string();
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // JSON detection
     if trimmed.starts_with('{') || trimmed.starts_with('[') {
         if serde_json::from_str::<serde_json::Value>(content).is_ok() {
             return "json".to_string();
         }
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // YAML detection (simple heuristic)
     if regex::Regex::new(r"^[\w-]+:\s").unwrap().is_match(content) {
         return "yaml".to_string();
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     // CSV detection
     if content.contains(',') {
         let lines: Vec<&str> = content.lines().collect();
@@ -207,7 +312,11 @@ pub fn detect_language_from_content(content: &str) -> String {
             return "csv".to_string();
         }
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     "plaintext".to_string()
 }
 
@@ -231,6 +340,7 @@ mod tests {
 
     #[test]
     fn test_detect_language_from_content() {
+<<<<<<< HEAD
         assert_eq!(
             detect_language_from_content("#!/usr/bin/env python3\nprint('hi')"),
             "python"
@@ -253,3 +363,15 @@ mod tests {
         assert_eq!(detect_language_from_content("just some text"), "plaintext");
     }
 }
+=======
+        assert_eq!(detect_language_from_content("#!/usr/bin/env python3\nprint('hi')"), "python");
+        assert_eq!(detect_language_from_content("#!/bin/bash\necho hi"), "bash");
+        assert_eq!(detect_language_from_content("<?xml version=\"1.0\"?><root/>"), "xml");
+        assert_eq!(detect_language_from_content("<!DOCTYPE html><html></html>"), "html");
+        assert_eq!(detect_language_from_content("{\"key\": \"value\"}"), "json");
+        assert_eq!(detect_language_from_content("key: value\nother: value"), "yaml");
+        assert_eq!(detect_language_from_content("a,b,c\n1,2,3"), "csv");
+        assert_eq!(detect_language_from_content("just some text"), "plaintext");
+    }
+}
+>>>>>>> origin/master
