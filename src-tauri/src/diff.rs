@@ -598,9 +598,9 @@ pub fn compute_diff(
     let emit_removed_until = |lines: &mut Vec<DiffLine>,
                               stats: &mut DiffStats,
                               orig_idx: &mut usize,
-                              changed_idx: &mut usize,
+                              _changed_idx: &mut usize,
                               orig_line_num: &mut usize,
-                              changed_line_num: &mut usize,
+                              _changed_line_num: &mut usize,
                               end: usize,
                               original_lines: &[String]| {
         while *orig_idx < end {
@@ -620,9 +620,9 @@ pub fn compute_diff(
     };
     let emit_added_until = |lines: &mut Vec<DiffLine>,
                             stats: &mut DiffStats,
-                            orig_idx: &mut usize,
+                            _orig_idx: &mut usize,
                             changed_idx: &mut usize,
-                            orig_line_num: &mut usize,
+                            _orig_line_num: &mut usize,
                             changed_line_num: &mut usize,
                             end: usize,
                             changed_lines: &[String]| {

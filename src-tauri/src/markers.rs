@@ -123,20 +123,6 @@ pub fn compute_group_positions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::DiffLine;
-
-    fn make_line(r#type: DiffType, content: &str) -> DiffLine {
-        DiffLine {
-            r#type,
-            original_line_number: Some(1),
-            changed_line_number: Some(1),
-            content: content.to_string(),
-            original_content: None,
-            changed_content: None,
-            char_diffs: None,
-        }
-    }
-
     #[test]
     fn test_group_kind() {
         assert_eq!(

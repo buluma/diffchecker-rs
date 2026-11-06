@@ -1,10 +1,10 @@
-mod diff;
-mod highlight;
+pub mod diff;
+pub mod highlight;
 mod language;
-mod markers;
+pub mod markers;
 mod merge;
 mod store;
-mod types;
+pub mod types;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
