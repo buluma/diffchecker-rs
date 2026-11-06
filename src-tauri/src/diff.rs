@@ -1,12 +1,12 @@
 use crate::types::{
-    CharDiff, CharDiffType, DiffLimitError, DiffLine, DiffType, DiffOptions, DiffPrecision,
-    DiffResult, DiffStats,
+    CharDiff, CharDiffType, DiffLimitError, DiffLine, DiffOptions, DiffPrecision, DiffResult,
+    DiffStats, DiffType,
 };
 use std::collections::HashMap;
 
 const MAX_INPUT_LINES: usize = 10_000;
 const MAX_INPUT_BYTES: usize = 5 * 1024 * 1024;
-const MAX_SIDE_BYTES: usize = 1024 * 1024;
+const _MAX_SIDE_BYTES: usize = 1024 * 1024;
 const MIN_LINE_SIMILARITY: f64 = 0.5;
 const MAX_GAP_COMPARISONS: usize = 100_000;
 const MAX_INLINE_DIFF_CELLS: usize = 4_000_000;
@@ -93,7 +93,11 @@ where
 }
 
 /// Myers diff algorithm - computes matches between two sequences
-fn compute_myers_matches<T, F>(a: &[T], b: &[T], equals: F) -> Result<Vec<(usize, usize)>, DiffComplexityError>
+fn compute_myers_matches<T, F>(
+    a: &[T],
+    b: &[T],
+    equals: F,
+) -> Result<Vec<(usize, usize)>, DiffComplexityError>
 where
     F: Fn(&T, &T) -> bool,
 {
@@ -183,7 +187,11 @@ where
                 && previous.get(&(diagonal - 1)).copied().unwrap_or(usize::MAX)
                     < previous.get(&(diagonal + 1)).copied().unwrap_or(0));
 
-        let previous_diagonal = if from_down { diagonal + 1 } else { diagonal - 1 };
+        let previous_diagonal = if from_down {
+            diagonal + 1
+        } else {
+            diagonal - 1
+        };
         let previous_x = previous.get(&previous_diagonal).copied().unwrap_or(0);
         let previous_y = if previous_x as isize > previous_diagonal {
             previous_x - previous_diagonal as usize
@@ -222,12 +230,18 @@ fn compute_char_diff(original: &str, changed: &str, options: &DiffOptions) -> Ve
     let changed_chars: Vec<char> = changed.chars().collect();
 
     let orig_normalized: Vec<char> = if options.ignore_case {
-        orig_chars.iter().map(|c| c.to_lowercase().next().unwrap_or(*c)).collect()
+        orig_chars
+            .iter()
+            .map(|c| c.to_lowercase().next().unwrap_or(*c))
+            .collect()
     } else {
         orig_chars.clone()
     };
     let changed_normalized: Vec<char> = if options.ignore_case {
-        changed_chars.iter().map(|c| c.to_lowercase().next().unwrap_or(*c)).collect()
+        changed_chars
+            .iter()
+            .map(|c| c.to_lowercase().next().unwrap_or(*c))
+            .collect()
     } else {
         changed_chars.clone()
     };
@@ -361,9 +375,14 @@ fn determine_precision(original: &str, changed: &str, options: &DiffOptions) -> 
     }
 
     let avg_length = (original.len() + changed.len()) / 2;
-    let has_numbers = original.chars().any(|c| c.is_ascii_digit()) || changed.chars().any(|c| c.is_ascii_digit());
-    let has_special_chars = original.chars().any(|c| !c.is_alphanumeric() && !c.is_whitespace())
-        || changed.chars().any(|c| !c.is_alphanumeric() && !c.is_whitespace());
+    let has_numbers =
+        original.chars().any(|c| c.is_ascii_digit()) || changed.chars().any(|c| c.is_ascii_digit());
+    let has_special_chars = original
+        .chars()
+        .any(|c| !c.is_alphanumeric() && !c.is_whitespace())
+        || changed
+            .chars()
+            .any(|c| !c.is_alphanumeric() && !c.is_whitespace());
 
     if avg_length < 50 || has_numbers || has_special_chars {
         DiffPrecision::Character
@@ -416,14 +435,14 @@ fn align_gap(
     changed_normalized: &[String],
     orig_idx: usize,
     changed_idx: usize,
-    orig_end: usize,
-    changed_end: usize,
+    _orig_end: usize,
+    _changed_end: usize,
 ) -> Vec<(usize, usize)> {
-    let removed: Vec<LineProfile> = orig_normalized[orig_idx..orig_end]
+    let removed: Vec<LineProfile> = orig_normalized[orig_idx.._orig_end]
         .iter()
         .map(|s| build_line_profile(s))
         .collect();
-    let added: Vec<LineProfile> = changed_normalized[changed_idx..changed_end]
+    let added: Vec<LineProfile> = changed_normalized[changed_idx.._changed_end]
         .iter()
         .map(|s| build_line_profile(s))
         .collect();
@@ -478,7 +497,11 @@ pub fn filter_diff_lines(lines: &[DiffLine], options: &DiffOptions) -> Vec<DiffL
 }
 
 /// Main diff function - compares two texts and returns structured diff result
-pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptions) -> Result<DiffResult, DiffLimitError> {
+pub fn compute_diff(
+    original_text: &str,
+    changed_text: &str,
+    options: &DiffOptions,
+) -> Result<DiffResult, DiffLimitError> {
     if original_text.len() > MAX_INPUT_BYTES || changed_text.len() > MAX_INPUT_BYTES {
         return Err(DiffLimitError::new("Each input is limited to 5 MiB."));
     }
@@ -487,7 +510,12 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
     if original_text.is_empty() && changed_text.is_empty() {
         return Ok(DiffResult {
             lines: Vec::new(),
-            stats: DiffStats { added: 0, removed: 0, modified: 0, unchanged: 0 },
+            stats: DiffStats {
+                added: 0,
+                removed: 0,
+                modified: 0,
+                unchanged: 0,
+            },
             warning: None,
         });
     }
@@ -496,13 +524,20 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
     let changed_lines: Vec<String> = changed_text.split('\n').map(|s| s.to_string()).collect();
 
     if original_lines.len() > MAX_INPUT_LINES || changed_lines.len() > MAX_INPUT_LINES {
-        return Err(DiffLimitError::new(
-            &format!("Each input is limited to {} lines.", MAX_INPUT_LINES),
-        ));
+        return Err(DiffLimitError::new(&format!(
+            "Each input is limited to {} lines.",
+            MAX_INPUT_LINES
+        )));
     }
 
-    let orig_normalized: Vec<String> = original_lines.iter().map(|l| normalize_line(l, options)).collect();
-    let changed_normalized: Vec<String> = changed_lines.iter().map(|l| normalize_line(l, options)).collect();
+    let orig_normalized: Vec<String> = original_lines
+        .iter()
+        .map(|l| normalize_line(l, options))
+        .collect();
+    let changed_normalized: Vec<String> = changed_lines
+        .iter()
+        .map(|l| normalize_line(l, options))
+        .collect();
 
     // Compute LCS at line level using Myers
     let lcs = match compute_myers_matches(&orig_normalized, &changed_normalized, |a, b| a == b) {
@@ -531,7 +566,11 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
         warning = Some("Used simplified alignment because the inputs differ too extensively for a precise diff.".to_string());
     }
 
-    let build_modified_line = |orig_content: &str, changed_content: &str, original_line_number: usize, changed_line_number: usize| -> DiffLine {
+    let build_modified_line = |orig_content: &str,
+                               changed_content: &str,
+                               original_line_number: usize,
+                               changed_line_number: usize|
+     -> DiffLine {
         let mut line = DiffLine {
             r#type: DiffType::Modified,
             original_line_number: Some(original_line_number),
@@ -545,7 +584,9 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
         if orig_content.len() * changed_content.len() <= MAX_INLINE_DIFF_CELLS {
             let precision = determine_precision(orig_content, changed_content, options);
             line.char_diffs = Some(match precision {
-                DiffPrecision::Character => compute_char_diff(orig_content, changed_content, options),
+                DiffPrecision::Character => {
+                    compute_char_diff(orig_content, changed_content, options)
+                }
                 DiffPrecision::Word => compute_word_diff(orig_content, changed_content, options),
                 DiffPrecision::Smart => unreachable!(),
             });
@@ -577,7 +618,6 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
             *orig_line_num += 1;
         }
     };
-
     let emit_added_until = |lines: &mut Vec<DiffLine>,
                             stats: &mut DiffStats,
                             orig_idx: &mut usize,
@@ -601,15 +641,14 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
             *changed_line_num += 1;
         }
     };
-
     let emit_gap = |lines: &mut Vec<DiffLine>,
                     stats: &mut DiffStats,
                     orig_idx: &mut usize,
                     changed_idx: &mut usize,
                     orig_line_num: &mut usize,
                     changed_line_num: &mut usize,
-                    orig_end: usize,
-                    changed_end: usize,
+                    _orig_end: usize,
+                    _changed_end: usize,
                     orig_normalized: &[String],
                     changed_normalized: &[String],
                     original_lines: &[String],
@@ -619,13 +658,31 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
             changed_normalized,
             *orig_idx,
             *changed_idx,
-            orig_end,
-            changed_end,
+            _orig_end,
+            _changed_end,
         );
 
         for (orig_pair, changed_pair) in pairs {
-            emit_removed_until(lines, stats, orig_idx, changed_idx, orig_line_num, changed_line_num, orig_pair, original_lines);
-            emit_added_until(lines, stats, orig_idx, changed_idx, orig_line_num, changed_line_num, changed_pair, changed_lines);
+            emit_removed_until(
+                lines,
+                stats,
+                orig_idx,
+                changed_idx,
+                orig_line_num,
+                changed_line_num,
+                orig_pair,
+                original_lines,
+            );
+            emit_added_until(
+                lines,
+                stats,
+                orig_idx,
+                changed_idx,
+                orig_line_num,
+                changed_line_num,
+                changed_pair,
+                changed_lines,
+            );
 
             lines.push(build_modified_line(
                 &original_lines[*orig_idx],
@@ -640,8 +697,26 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
             *changed_line_num += 1;
         }
 
-        emit_removed_until(lines, stats, orig_idx, changed_idx, orig_line_num, changed_line_num, orig_end, original_lines);
-        emit_added_until(lines, stats, orig_idx, changed_idx, orig_line_num, changed_line_num, changed_end, changed_lines);
+        emit_removed_until(
+            lines,
+            stats,
+            orig_idx,
+            changed_idx,
+            orig_line_num,
+            changed_line_num,
+            _orig_end,
+            original_lines,
+        );
+        emit_added_until(
+            lines,
+            stats,
+            orig_idx,
+            changed_idx,
+            orig_line_num,
+            changed_line_num,
+            _changed_end,
+            changed_lines,
+        );
     };
 
     for (orig_pos, changed_pos) in lcs {
@@ -691,7 +766,11 @@ pub fn compute_diff(original_text: &str, changed_text: &str, options: &DiffOptio
         &changed_lines,
     );
 
-    Ok(DiffResult { lines, stats, warning })
+    Ok(DiffResult {
+        lines,
+        stats,
+        warning,
+    })
 }
 
 #[cfg(test)]
@@ -722,7 +801,11 @@ mod tests {
     #[test]
     fn test_added_lines() {
         let result = compute_diff("hello", "hello\nworld", &default_options()).unwrap();
-        let added = result.lines.iter().filter(|l| l.r#type == DiffType::Added).count();
+        let added = result
+            .lines
+            .iter()
+            .filter(|l| l.r#type == DiffType::Added)
+            .count();
         assert_eq!(added, 1);
         assert_eq!(result.stats.added, 1);
     }
@@ -730,7 +813,11 @@ mod tests {
     #[test]
     fn test_removed_lines() {
         let result = compute_diff("hello\nworld", "hello", &default_options()).unwrap();
-        let removed = result.lines.iter().filter(|l| l.r#type == DiffType::Removed).count();
+        let removed = result
+            .lines
+            .iter()
+            .filter(|l| l.r#type == DiffType::Removed)
+            .count();
         assert_eq!(removed, 1);
         assert_eq!(result.stats.removed, 1);
     }
@@ -738,7 +825,11 @@ mod tests {
     #[test]
     fn test_modified_line() {
         let result = compute_diff("hello world", "hello there", &default_options()).unwrap();
-        let modified = result.lines.iter().filter(|l| l.r#type == DiffType::Modified).count();
+        let modified = result
+            .lines
+            .iter()
+            .filter(|l| l.r#type == DiffType::Modified)
+            .count();
         assert_eq!(modified, 1);
         assert_eq!(result.stats.modified, 1);
     }
@@ -783,7 +874,10 @@ mod tests {
         let mut options = default_options();
         options.hide_unchanged_lines = true;
         // Use many lines so filtering actually reduces the output
-        let original = (0..20).map(|i| format!("line{}", i)).collect::<Vec<_>>().join("\n");
+        let original = (0..20)
+            .map(|i| format!("line{}", i))
+            .collect::<Vec<_>>()
+            .join("\n");
         let changed = original.replace("line5", "line5modified");
         let result = compute_diff(&original, &changed, &options).unwrap();
         let filtered = filter_diff_lines(&result.lines, &options);
@@ -802,7 +896,8 @@ mod tests {
     fn test_custom_ignore_rules() {
         let mut options = default_options();
         options.custom_ignore_rules = vec!["TIMESTAMP=.*".to_string()];
-        let result = compute_diff("TIMESTAMP=123\nvalue", "TIMESTAMP=456\nvalue", &options).unwrap();
+        let result =
+            compute_diff("TIMESTAMP=123\nvalue", "TIMESTAMP=456\nvalue", &options).unwrap();
         assert_eq!(result.stats.unchanged, 2);
     }
 }

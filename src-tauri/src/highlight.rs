@@ -66,24 +66,27 @@ pub fn highlight_code(code: &str, language: &str) -> Result<String, String> {
     } else {
         None
     };
-    
+
     let syntax = syntax.unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-    
+
     // Use a popular theme (base16-ocean.dark is close to VS Code dark)
-    let theme = THEME_SET.themes.get("base16-ocean.dark")
+    let theme = THEME_SET
+        .themes
+        .get("base16-ocean.dark")
         .or_else(|| THEME_SET.themes.get("InspiredGitHub"))
         .or_else(|| THEME_SET.themes.get("Monokai"))
         .unwrap_or_else(|| &THEME_SET.themes.values().next().unwrap());
-    
+
     let mut highlighter = HighlightLines::new(syntax, theme);
-    
+
     let mut output = String::new();
     output.push_str("<pre><code>");
-    
+
     for line in code.lines() {
-        let regions = highlighter.highlight_line(line, &SYNTAX_SET)
+        let regions = highlighter
+            .highlight_line(line, &SYNTAX_SET)
             .map_err(|e| format!("Highlighting error: {}", e))?;
-        
+
         for (style, text) in regions {
             let css_class = style_to_css_class(style);
             let escaped = escape_html(text);
@@ -91,7 +94,7 @@ pub fn highlight_code(code: &str, language: &str) -> Result<String, String> {
         }
         output.push('\n');
     }
-    
+
     output.push_str("</code></pre>");
     Ok(output)
 }
@@ -104,31 +107,37 @@ pub fn highlight_code_inline(code: &str, language: &str) -> Result<String, Strin
     } else {
         None
     };
-    
+
     let syntax = syntax.unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-    
-    let theme = THEME_SET.themes.get("base16-ocean.dark")
+
+    let theme = THEME_SET
+        .themes
+        .get("base16-ocean.dark")
         .or_else(|| THEME_SET.themes.get("InspiredGitHub"))
         .or_else(|| THEME_SET.themes.get("Monokai"))
         .unwrap_or_else(|| &THEME_SET.themes.values().next().unwrap());
-    
+
     let mut highlighter = HighlightLines::new(syntax, theme);
-    
+
     let mut html = String::new();
     html.push_str("<pre><code>");
-    
+
     for line in code.lines() {
-        let regions = highlighter.highlight_line(line, &SYNTAX_SET)
+        let regions = highlighter
+            .highlight_line(line, &SYNTAX_SET)
             .map_err(|e| format!("Highlighting error: {}", e))?;
-        
+
         for (style, text) in regions {
             let style_html = style_to_inline_css(style);
             let escaped = escape_html(text);
-            html.push_str(&format!("<span style=\"{}\">{}</span>", style_html, escaped));
+            html.push_str(&format!(
+                "<span style=\"{}\">{}</span>",
+                style_html, escaped
+            ));
         }
         html.push('\n');
     }
-    
+
     html.push_str("</code></pre>");
     Ok(html)
 }
@@ -136,20 +145,33 @@ pub fn highlight_code_inline(code: &str, language: &str) -> Result<String, Strin
 fn style_to_css_class(style: Style) -> String {
     let mut classes = Vec::new();
     if style.foreground.r != 0 || style.foreground.g != 0 || style.foreground.b != 0 {
-        classes.push(format!("color-#{:02x}{:02x}{:02x}", 
-            style.foreground.r, style.foreground.g, style.foreground.b));
+        classes.push(format!(
+            "color-#{:02x}{:02x}{:02x}",
+            style.foreground.r, style.foreground.g, style.foreground.b
+        ));
     }
     if style.background.r != 0 || style.background.g != 0 || style.background.b != 0 {
-        classes.push(format!("bg-#{:02x}{:02x}{:02x}", 
-            style.background.r, style.background.g, style.background.b));
+        classes.push(format!(
+            "bg-#{:02x}{:02x}{:02x}",
+            style.background.r, style.background.g, style.background.b
+        ));
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::BOLD) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::BOLD)
+    {
         classes.push("bold".to_string());
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::ITALIC) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::ITALIC)
+    {
         classes.push("italic".to_string());
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::UNDERLINE) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::UNDERLINE)
+    {
         classes.push("underline".to_string());
     }
     classes.join(" ")
@@ -158,20 +180,33 @@ fn style_to_css_class(style: Style) -> String {
 fn style_to_inline_css(style: Style) -> String {
     let mut css = String::new();
     if style.foreground.r != 0 || style.foreground.g != 0 || style.foreground.b != 0 {
-        css.push_str(&format!("color:#{:02x}{:02x}{:02x};", 
-            style.foreground.r, style.foreground.g, style.foreground.b));
+        css.push_str(&format!(
+            "color:#{:02x}{:02x}{:02x};",
+            style.foreground.r, style.foreground.g, style.foreground.b
+        ));
     }
     if style.background.r != 0 || style.background.g != 0 || style.background.b != 0 {
-        css.push_str(&format!("background-color:#{:02x}{:02x}{:02x};", 
-            style.background.r, style.background.g, style.background.b));
+        css.push_str(&format!(
+            "background-color:#{:02x}{:02x}{:02x};",
+            style.background.r, style.background.g, style.background.b
+        ));
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::BOLD) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::BOLD)
+    {
         css.push_str("font-weight:bold;");
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::ITALIC) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::ITALIC)
+    {
         css.push_str("font-style:italic;");
     }
-    if style.font_style.contains(syntect::highlighting::FontStyle::UNDERLINE) {
+    if style
+        .font_style
+        .contains(syntect::highlighting::FontStyle::UNDERLINE)
+    {
         css.push_str("text-decoration:underline;");
     }
     css
