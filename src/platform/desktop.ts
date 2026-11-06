@@ -1,5 +1,6 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { HistoryAddResult, HistoryEntry, RecentFile } from '../types/history';
+import type { DiffLine } from '../types/diff';
 
 type OpenFileResult = { path: string; content: string } | { error: string };
 
@@ -15,6 +16,8 @@ export interface DesktopAPI {
   clearHistory(): Promise<HistoryEntry[]>;
   getSaveHistory(): Promise<boolean>;
   setSaveHistory(enabled: boolean): Promise<boolean>;
+  detectLanguage(path: string | null, content: string): Promise<string>;
+  buildMergedContent(lines: DiffLine[], choices: Record<number, 'left' | 'right'>): Promise<string>;
 }
 
 const tauriApi: DesktopAPI = {
@@ -41,6 +44,8 @@ const tauriApi: DesktopAPI = {
   clearHistory: () => invoke<HistoryEntry[]>('clear_history'),
   getSaveHistory: () => invoke<boolean>('get_save_history'),
   setSaveHistory: (enabled) => invoke<boolean>('set_save_history', { enabled }),
+  detectLanguage: (path, content) => invoke<string>('detect_language_cmd', { path, content }),
+  buildMergedContent: (lines, choices) => invoke<string>('build_merged_content_cmd', { lines, choices }),
 };
 
 export const isDesktopApp = () =>

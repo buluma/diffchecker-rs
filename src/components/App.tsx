@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Editor } from './Editor';
 import { DiffView } from './DiffView';
 import { Toolbar } from './Toolbar';
@@ -55,6 +55,7 @@ export function App() {
   // Whether the input editors stay visible under the diff
   const [showInput, setShowInput] = useState(true);
   const [mergedContent, setMergedContent] = useState<string>('');
+  const mergeRequestRef = useRef(0);
   const [mergeChoices, setMergeChoices] = useState<Record<number, MergeChoice>>({});
   const [version, setVersion] = useState('1.0.0');
   const [historyNotice, setHistoryNotice] = useState<string | null>(null);
@@ -67,6 +68,20 @@ export function App() {
     }
   }, []);
 
+  const updateMergedContent = useCallback((lines: DiffLine[], choices: Record<number, MergeChoice>) => {
+    const request = ++mergeRequestRef.current;
+    const api = getDesktopAPI();
+    if (!api) {
+      setMergedContent(buildMergedContent(lines, choices));
+      return;
+    }
+    void api.buildMergedContent(lines, choices).then(content => {
+      if (request === mergeRequestRef.current) setMergedContent(content);
+    }).catch(error => {
+      if (request === mergeRequestRef.current) reportInputError(String(error));
+    });
+  }, [reportInputError]);
+
   const handleMergeChange = useCallback((line: DiffLine, direction: 'left' | 'right') => {
     if (!diffResult) return;
     
@@ -75,8 +90,8 @@ export function App() {
 
     const nextChoices = { ...mergeChoices, [lineIndex]: direction };
     setMergeChoices(nextChoices);
-    setMergedContent(buildMergedContent(diffResult.lines, nextChoices));
-  }, [diffResult, mergeChoices]);
+    updateMergedContent(diffResult.lines, nextChoices);
+  }, [diffResult, mergeChoices, updateMergedContent]);
 
   const handleSave = useCallback(async () => {
     const desktopAPI = getDesktopAPI();
@@ -120,12 +135,14 @@ export function App() {
   }, [openRecent, refreshRecentFiles]);
 
   const handleRestore = useCallback((entry: HistoryEntry) => {
+    mergeRequestRef.current++;
     setMergeMode(false);
     restoreComparison(entry.original, entry.changed);
     setShowHistory(false);
   }, [restoreComparison]);
 
   const handleCloseDiff = useCallback(() => {
+    mergeRequestRef.current++;
     setMergeMode(false);
     closeDiff();
   }, [closeDiff]);
@@ -194,10 +211,11 @@ export function App() {
         onSave={handleSave}
         canMerge={!!diffResult && filteredLines.some(l => l.type !== 'equal')}
         onToggleMerge={() => {
+          mergeRequestRef.current++;
           setMergeMode(!mergeMode);
           if (!mergeMode && diffResult) {
             setMergeChoices({});
-            setMergedContent(buildMergedContent(diffResult.lines));
+            updateMergedContent(diffResult.lines, {});
           }
         }}
         mergeMode={mergeMode}
@@ -221,7 +239,10 @@ export function App() {
             </div>
             <Editor
               file={{ path: 'merged.txt', content: mergedContent, language: originalFile.language }}
-              onChange={setMergedContent}
+              onChange={content => {
+                mergeRequestRef.current++;
+                setMergedContent(content);
+              }}
               showLineNumbers={true}
             />
           </div>

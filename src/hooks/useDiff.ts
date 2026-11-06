@@ -7,6 +7,13 @@ import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
 import { getDesktopAPI } from '../platform/desktop';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
+async function detectLanguage(path: string | null, content: string): Promise<string> {
+  const api = getDesktopAPI();
+  return api ? api.detectLanguage(path, content) : path
+    ? detectLanguageFromPath(path)
+    : detectLanguageFromContent(content);
+}
+
 export function useDiff() {
   const [originalFile, setOriginalFile] = useState<FileContent>({
     path: null,
@@ -31,6 +38,7 @@ export function useDiff() {
   // Whether a diff is already showing, so later recomputes (typing in the editors under the diff) can be debounced
   const hasResultRef = useRef(false);
   const requestIdRef = useRef(0);
+  const languageRequestRef = useRef({ original: 0, changed: 0 });
 
   // Compute diff while comparing, and recompute when content or options change
   useEffect(() => {
@@ -97,37 +105,29 @@ export function useDiff() {
     return filterDiffLines(diffResult.lines, options);
   }, [diffResult, options]);
 
-  const updateOriginalContent = useCallback((content: string, path?: string) => {
+  const updateSide = useCallback((side: 'original' | 'changed', content: string, path: string | null) => {
     const error = getInputLimitError(content);
-    if (error) {
-      setInputError(error);
-      return;
-    }
+    if (error) { setInputError(error); return false; }
     setInputError(null);
     setComparisonWarning(null);
-    setOriginalFile(prev => ({
-      ...prev,
-      content,
-      path: path ?? prev.path,
-      language: path ? detectLanguageFromPath(path) : detectLanguageFromContent(content),
-    }));
+    const requestId = ++languageRequestRef.current[side];
+    const setFile = side === 'original' ? setOriginalFile : setChangedFile;
+    setFile(prev => ({ ...prev, content, path }));
+    void detectLanguage(path, content).catch(() => path ? detectLanguageFromPath(path) : detectLanguageFromContent(content)).then(language => {
+      if (requestId === languageRequestRef.current[side]) {
+        setFile(prev => ({ ...prev, language }));
+      }
+    });
+    return true;
   }, []);
 
+  const updateOriginalContent = useCallback((content: string, path?: string) => {
+    updateSide('original', content, path ?? originalFile.path);
+  }, [updateSide, originalFile.path]);
+
   const updateChangedContent = useCallback((content: string, path?: string) => {
-    const error = getInputLimitError(content);
-    if (error) {
-      setInputError(error);
-      return;
-    }
-    setInputError(null);
-    setComparisonWarning(null);
-    setChangedFile(prev => ({
-      ...prev,
-      content,
-      path: path ?? prev.path,
-      language: path ? detectLanguageFromPath(path) : detectLanguageFromContent(content),
-    }));
-  }, []);
+    updateSide('changed', content, path ?? changedFile.path);
+  }, [updateSide, changedFile.path]);
 
   const setOption = useCallback((updates: Partial<DiffOptions>) => {
     setOptions(prev => ({ ...prev, ...updates }));
@@ -136,6 +136,8 @@ export function useDiff() {
   const reportInputError = useCallback((message: string) => setInputError(message), []);
 
   const swapFiles = useCallback(() => {
+    languageRequestRef.current.original++;
+    languageRequestRef.current.changed++;
     setOriginalFile(prevOrig => {
       setChangedFile(prevChanged => ({ ...prevChanged, ...prevOrig }));
       return { ...prevOrig, ...changedFile };
@@ -144,25 +146,8 @@ export function useDiff() {
 
   const compare = useCallback(() => setIsComparing(true), []);
 
-  const setSideFile = useCallback((side: 'original' | 'changed', file: { path: string | null; content: string }) => {
-    const error = getInputLimitError(file.content);
-    if (error) {
-      setInputError(error);
-      return false;
-    }
-    setInputError(null);
-    const value = {
-      path: file.path,
-      content: file.content,
-      language: file.path ? detectLanguageFromPath(file.path) : detectLanguageFromContent(file.content),
-    };
-    if (side === 'original') {
-      setOriginalFile(value);
-    } else {
-      setChangedFile(value);
-    }
-    return true;
-  }, []);
+  const setSideFile = useCallback((side: 'original' | 'changed', file: { path: string | null; content: string }) =>
+    updateSide(side, file.content, file.path), [updateSide]);
 
   /** Reopens a file from the recent list. False if it couldn't be read (it may have moved). */
   const openRecent = useCallback(async (side: 'original' | 'changed', filePath: string) => {
@@ -176,7 +161,7 @@ export function useDiff() {
   }, [setSideFile]);
 
   /** Loads both sides from a saved comparison and shows its diff */
-  const restoreComparison = useCallback((
+  const restoreComparison = useCallback(async (
     original: { path: string | null; content: string },
     changed: { path: string | null; content: string },
   ) => {
@@ -193,6 +178,8 @@ export function useDiff() {
   }, []);
 
   const clearFiles = useCallback(() => {
+    languageRequestRef.current.original++;
+    languageRequestRef.current.changed++;
     hasResultRef.current = false;
     setIsComparing(false);
     setLanguageOverride(null);
@@ -212,18 +199,7 @@ export function useDiff() {
           setInputError(result.error);
           return;
         }
-        const error = getInputLimitError(result.content);
-        if (error) {
-          setInputError(error);
-          return;
-        }
-        setInputError(null);
-        const language = detectLanguageFromPath(result.path);
-        if (side === 'original') {
-          setOriginalFile({ path: result.path, content: result.content, language });
-        } else {
-          setChangedFile({ path: result.path, content: result.content, language });
-        }
+        setSideFile(side, result);
       }
     } else {
       // Fallback for web - use file input
@@ -237,22 +213,14 @@ export function useDiff() {
             setInputError('Each input is limited to 5 MiB.');
             return;
           }
-          void file.text().then(content => {
-            const error = getInputLimitError(content);
-            if (error) {
-              setInputError(error);
-              return;
-            }
-            setInputError(null);
-            const language = detectLanguageFromPath(file.name);
-            if (side === 'original') setOriginalFile({ path: file.name, content, language });
-            else setChangedFile({ path: file.name, content, language });
+          void file.text().then(async content => {
+            setSideFile(side, { path: file.name, content });
           }).catch(() => setInputError(`Could not read ${file.name}.`));
         }
       };
       input.click();
     }
-  }, []);
+  }, [setSideFile]);
 
   const originalFileView = useMemo(
     () => (languageOverride ? { ...originalFile, language: languageOverride } : originalFile),
