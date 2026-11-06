@@ -9,18 +9,9 @@ pub enum MergeChoice {
 }
 
 /// Builds merged output from the complete diff, preserving unchanged lines.
-<<<<<<< HEAD
 pub fn build_merged_content(lines: &[DiffLine], choices: &HashMap<usize, MergeChoice>) -> String {
     let mut result = Vec::new();
 
-=======
-pub fn build_merged_content(
-    lines: &[DiffLine],
-    choices: &HashMap<usize, MergeChoice>,
-) -> String {
-    let mut result = Vec::new();
-    
->>>>>>> origin/master
     for (index, line) in lines.iter().enumerate() {
         let choice = choices.get(&index).copied();
 
@@ -35,26 +26,18 @@ pub fn build_merged_content(
             }
             DiffType::Removed => {
                 if choice != Some(MergeChoice::Right) {
-<<<<<<< HEAD
                     result.push(
                         line.original_content
                             .clone()
                             .unwrap_or_else(|| line.content.clone()),
                     );
-=======
-                    result.push(line.original_content.clone().unwrap_or_else(|| line.content.clone()));
->>>>>>> origin/master
                 }
             }
             DiffType::Modified => {
                 let content = if choice == Some(MergeChoice::Left) {
-<<<<<<< HEAD
                     line.original_content
                         .clone()
                         .unwrap_or_else(|| line.content.clone())
-=======
-                    line.original_content.clone().unwrap_or_else(|| line.content.clone())
->>>>>>> origin/master
                 } else {
                     line.content.clone()
                 };
@@ -62,11 +45,7 @@ pub fn build_merged_content(
             }
         }
     }
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> origin/master
     result.join("\n")
 }
 
@@ -109,21 +88,13 @@ mod tests {
             make_line(DiffType::Added, "new_line", None, 1),
             make_line(DiffType::Equal, "line2", None, 2),
         ];
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose left (original) - added line should be omitted
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Left);
         let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nline2");
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose right (changed) - added line should be included
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
@@ -138,21 +109,13 @@ mod tests {
             make_line(DiffType::Removed, "old_line", Some("old_line"), 1),
             make_line(DiffType::Equal, "line2", None, 2),
         ];
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose left (original) - removed line should be included
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Left);
         let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nold_line\nline2");
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose right (changed) - removed line should be omitted
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
@@ -167,29 +130,17 @@ mod tests {
             make_line(DiffType::Modified, "new_content", Some("old_content"), 1),
             make_line(DiffType::Equal, "line2", None, 2),
         ];
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose left (original)
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Left);
         let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nold_content\nline2");
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> origin/master
         // Choose right (changed)
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
         let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nnew_content\nline2");
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/master

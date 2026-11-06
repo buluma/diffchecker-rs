@@ -55,13 +55,8 @@ pub fn to_markers(groups: &[GroupPosition], scroll_height: f64) -> Vec<ChangeMar
 pub fn compute_group_positions(
     lines: &[DiffLine],
     line_height: f64,
-<<<<<<< HEAD
     _view_mode: crate::types::DiffViewMode,
     _wrap_lines: bool,
-=======
-    view_mode: crate::types::DiffViewMode,
-    wrap_lines: bool,
->>>>>>> origin/master
 ) -> Vec<GroupPosition> {
     let mut groups = Vec::new();
     let mut current_group: Option<(MarkerKind, usize)> = None;
@@ -144,7 +139,6 @@ mod tests {
 
     #[test]
     fn test_group_kind() {
-<<<<<<< HEAD
         assert_eq!(
             group_kind(&[DiffType::Added, DiffType::Added]),
             MarkerKind::Added
@@ -161,18 +155,11 @@ mod tests {
             group_kind(&[DiffType::Removed, DiffType::Modified]),
             MarkerKind::Modified
         );
-=======
-        assert_eq!(group_kind(&[DiffType::Added, DiffType::Added]), MarkerKind::Added);
-        assert_eq!(group_kind(&[DiffType::Removed, DiffType::Removed]), MarkerKind::Removed);
-        assert_eq!(group_kind(&[DiffType::Modified, DiffType::Added]), MarkerKind::Modified);
-        assert_eq!(group_kind(&[DiffType::Removed, DiffType::Modified]), MarkerKind::Modified);
->>>>>>> origin/master
     }
 
     #[test]
     fn test_to_markers() {
         let groups = vec![
-<<<<<<< HEAD
             GroupPosition {
                 kind: MarkerKind::Added,
                 top: 10.0,
@@ -183,10 +170,6 @@ mod tests {
                 top: 50.0,
                 height: 30.0,
             },
-=======
-            GroupPosition { kind: MarkerKind::Added, top: 10.0, height: 20.0 },
-            GroupPosition { kind: MarkerKind::Removed, top: 50.0, height: 30.0 },
->>>>>>> origin/master
         ];
         let markers = to_markers(&groups, 100.0);
         assert_eq!(markers.len(), 2);
@@ -201,8 +184,4 @@ mod tests {
         let markers = to_markers(&[], 0.0);
         assert!(markers.is_empty());
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/master
