@@ -1,14 +1,9 @@
 mod diff;
 mod highlight;
 mod language;
-<<<<<<< HEAD
 mod markers;
 mod merge;
 mod store;
-=======
-mod merge;
-mod markers;
->>>>>>> origin/master
 mod types;
 
 use std::collections::HashMap;
@@ -22,14 +17,8 @@ use tauri_plugin_dialog::DialogExt;
 use crate::diff::compute_diff;
 use crate::highlight::highlight_code;
 use crate::language::{detect_language_from_content, detect_language_from_path};
-<<<<<<< HEAD
 use crate::markers::{compute_group_positions, to_markers, ChangeMarker};
 use crate::merge::{build_merged_content, MergeChoice};
-=======
-use crate::merge::{build_merged_content, MergeChoice};
-use crate::markers::{compute_group_positions, to_markers, ChangeMarker, GroupPosition, MarkerKind};
-use crate::types::{DiffLine, DiffOptions, DiffResult, DiffViewMode};
->>>>>>> origin/master
 use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
     get_save_history as read_save_history, list_history as read_history_entries,
@@ -37,10 +26,7 @@ use crate::store::{
     set_save_history as write_save_history, HistoryAddResult, HistoryEntry, HistorySide,
     RecentFile, MAX_OPEN_BYTES,
 };
-<<<<<<< HEAD
 use crate::types::{DiffLine, DiffOptions, DiffResult, DiffViewMode};
-=======
->>>>>>> origin/master
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -239,14 +225,7 @@ async fn highlight_code_cmd(code: String, language: String) -> Result<String, St
 }
 
 #[tauri::command]
-<<<<<<< HEAD
 async fn detect_language_cmd(path: Option<String>, content: String) -> Result<String, String> {
-=======
-async fn detect_language_cmd(
-    path: Option<String>,
-    content: String,
-) -> Result<String, String> {
->>>>>>> origin/master
     let lang = if let Some(path) = path {
         detect_language_from_path(Some(&path))
     } else {
