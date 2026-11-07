@@ -213,18 +213,53 @@ fn style_to_inline_css(style: Style) -> String {
 }
 
 fn escape_html(text: &str) -> String {
-    const APOS: &str = "&apos;";
-    const QUOT: &str = "&";
-    text.replace('&', "&")
-        .replace('<', "<")
-        .replace('>', ">")
-        .replace('"', QUOT)
-        .replace('\'', APOS)
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
+/// Highlight independent display lines as HTML fragments.
+pub fn highlight_fragments(lines: &[String], language: &str) -> Result<Vec<String>, String> {
+    let syntax = map_language(language)
+        .and_then(|name| SYNTAX_SET.find_syntax_by_name(name))
+        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+    let theme = &THEME_SET.themes["base16-ocean.dark"];
+    lines
+        .iter()
+        .map(|line| {
+            if language == "plaintext" || line.len() > 100_000 {
+                return Ok(escape_html(line));
+            }
+            let mut highlighter = HighlightLines::new(syntax, theme);
+            let regions = highlighter
+                .highlight_line(line, &SYNTAX_SET)
+                .map_err(|error| error.to_string())?;
+            Ok(regions
+                .into_iter()
+                .map(|(style, text)| {
+                    format!(
+                        "<span style=\"{}\">{}</span>",
+                        style_to_inline_css(style),
+                        escape_html(text)
+                    )
+                })
+                .collect())
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fragments_escape_markup_and_preserve_empty_lines() {
+        let lines = vec!["<script>&\"'".to_string(), String::new()];
+        let result = highlight_fragments(&lines, "plaintext").unwrap();
+        assert_eq!(result, vec!["&lt;script&gt;&amp;&quot;&#39;", ""]);
+    }
 
     #[test]
     fn test_highlight_javascript() {

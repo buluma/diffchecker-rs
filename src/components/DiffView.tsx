@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import type { DiffLine, DiffOptions } from '../types/diff';
-import { highlightCode } from '../utils/highlight';
+import { useHighlightedLines } from '../hooks/useHighlightedLines';
 import { groupKind, toMarkers, type ChangeMarker } from '../utils/markers';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
@@ -31,6 +31,11 @@ export function DiffView({
   onScroll,
 }: DiffViewProps) {
   const [expandedRanges, setExpandedRanges] = useState<Set<number>>(new Set());
+  const originalHighlights = useHighlightedLines(lines.map(line => line.originalContent ?? line.content), originalLanguage);
+  const changedHighlights = useHighlightedLines(lines.map(line => line.content), changedLanguage);
+  const highlighted = (content: string, language: string) => language === originalLanguage
+    ? originalHighlights.get(content) ?? (language === changedLanguage ? changedHighlights.get(content) : undefined) ?? ' '
+    : changedHighlights.get(content) ?? ' ';
 
   const splitPaneRef = useRef<HTMLDivElement>(null);
   const unifiedPaneRef = useRef<HTMLDivElement>(null);
@@ -202,11 +207,11 @@ export function DiffView({
     }
 
     // Simple syntax highlighting
-    return <span dangerouslySetInnerHTML={{ __html: highlightCode(content || ' ', language) }} />;
+    return <span dangerouslySetInnerHTML={{ __html: highlighted(content, language) }} />;
   };
 
   const renderHighlightedCode = (content: string, language: string) => (
-    <span dangerouslySetInnerHTML={{ __html: highlightCode(content || ' ', language) }} />
+    <span dangerouslySetInnerHTML={{ __html: highlighted(content, language) }} />
   );
 
   // Both sides of a line share one row inside a single scroll container, so a line that wraps to

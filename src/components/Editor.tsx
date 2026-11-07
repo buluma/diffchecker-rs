@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import type { FileContent } from '../types/diff';
-import { highlightCode } from '../utils/highlight';
+import { useHighlightedLines } from '../hooks/useHighlightedLines';
 import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
 
 interface EditorProps {
@@ -95,19 +95,21 @@ export function Editor({
     return lines.map((_, i) => i + 1);
   }, [file.content]);
 
+  const highlighted = useHighlightedLines(file.content.split('\n'), file.language);
+
   // Highlighted code for syntax highlighting display
   const highlightedLines = useMemo(() => {
     const lines = file.content.split('\n');
     return lines.map((line, i) => {
-      const highlighted = highlightCode(line || ' ', file.language);
+      const html = highlighted.get(line) ?? ' ';
       const isHighlighted = highlightLine === i + 1;
       return (
         <div key={i} className={`highlighted-line ${isHighlighted ? 'highlighted' : ''}`}>
-          <span className="line-content" dangerouslySetInnerHTML={{ __html: highlighted }} />
+          <span className="line-content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       );
     });
-  }, [file.content, file.language, highlightLine]);
+  }, [file.content, highlightLine, highlighted]);
 
   return (
     <div className="editor-container" ref={containerRef}>
