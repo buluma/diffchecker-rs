@@ -1,4 +1,5 @@
 pub mod diff;
+mod export;
 pub mod highlight;
 mod language;
 pub mod markers;
@@ -220,6 +221,32 @@ async fn compute_diff_cmd(
 }
 
 #[tauri::command]
+fn filter_diff_indices_cmd(lines: Vec<DiffLine>, options: DiffOptions) -> Vec<usize> {
+    let mut visible = vec![false; lines.len()];
+    if !options.hide_unchanged_lines {
+        return (0..lines.len()).collect();
+    }
+    for (index, line) in lines.iter().enumerate() {
+        if line.r#type != DiffType::Equal {
+            let end = (index + 3).min(lines.len() - 1);
+            for item in &mut visible[index.saturating_sub(3)..=end] {
+                *item = true;
+            }
+        }
+    }
+    visible
+        .iter()
+        .enumerate()
+        .filter_map(|(index, value)| value.then_some(index))
+        .collect()
+}
+
+#[tauri::command]
+fn format_diff_cmd(lines: Vec<DiffLine>, mode: crate::types::DiffViewMode) -> String {
+    export::format_diff(&lines, &mode)
+}
+
+#[tauri::command]
 async fn highlight_code_cmd(code: String, language: String) -> Result<String, String> {
     highlight_code(&code, &language)
 }
@@ -289,6 +316,8 @@ pub fn run() {
             get_save_history,
             set_save_history,
             compute_diff_cmd,
+            filter_diff_indices_cmd,
+            format_diff_cmd,
             highlight_code_cmd,
             highlight_fragments_cmd,
             detect_language_cmd,
