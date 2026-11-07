@@ -922,6 +922,35 @@ mod tests {
     }
 
     #[test]
+    fn accepts_maximum_line_count_and_rejects_excess_bytes() {
+        let input = (0..MAX_INPUT_LINES)
+            .map(|i| format!("line {i}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let result = compute_diff(&input, &input, &default_options()).unwrap();
+        assert_eq!(result.stats.unchanged, MAX_INPUT_LINES);
+        assert!(result.warning.is_none());
+        let too_large = "a".repeat(MAX_INPUT_BYTES + 1);
+        assert!(compute_diff(&too_large, "", &default_options()).is_err());
+    }
+
+    #[test]
+    fn large_unrelated_inputs_use_bounded_fallback() {
+        let original = (0..400)
+            .map(|i| format!("line number {i} of the file"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let changed = (0..400)
+            .map(|i| format!("zzz {} qqq", i * 7919))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let result = compute_diff(&original, &changed, &default_options()).unwrap();
+        assert_eq!(result.stats.added, 400);
+        assert_eq!(result.stats.removed, 400);
+        assert!(result.warning.is_some());
+    }
+
+    #[test]
     fn test_large_input_rejection() {
         let large = "a\n".repeat(MAX_INPUT_LINES + 1);
         let result = compute_diff(&large, "b", &default_options());
