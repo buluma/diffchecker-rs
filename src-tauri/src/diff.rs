@@ -776,6 +776,50 @@ mod tests {
     }
 
     #[test]
+    fn shared_browser_and_desktop_fixtures() {
+        let fixtures: serde_json::Value =
+            serde_json::from_str(include_str!("../../src/utils/diff-parity-fixtures.json"))
+                .unwrap();
+        for fixture in fixtures.as_array().unwrap() {
+            let mut options = default_options();
+            options.ignore_case = fixture["ignoreCase"].as_bool().unwrap_or(false);
+            options.ignore_whitespace = fixture["ignoreWhitespace"].as_bool().unwrap_or(false);
+            options.custom_ignore_rules = fixture["ignoreRules"]
+                .as_array()
+                .map(|rules| {
+                    rules
+                        .iter()
+                        .map(|rule| rule.as_str().unwrap().to_string())
+                        .collect()
+                })
+                .unwrap_or_default();
+            let result = compute_diff(
+                fixture["original"].as_str().unwrap(),
+                fixture["changed"].as_str().unwrap(),
+                &options,
+            )
+            .unwrap();
+            let types: Vec<_> = result
+                .lines
+                .iter()
+                .map(|line| serde_json::to_value(&line.r#type).unwrap())
+                .collect();
+            assert_eq!(
+                serde_json::json!(types),
+                fixture["types"],
+                "{}",
+                fixture["name"]
+            );
+            assert_eq!(
+                serde_json::to_value(&result.stats).unwrap(),
+                fixture["stats"],
+                "{}",
+                fixture["name"]
+            );
+        }
+    }
+
+    #[test]
     fn packaged_sample_comparison() {
         let result = compute_diff(
             "package qualification alpha",
