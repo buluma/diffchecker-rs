@@ -213,10 +213,10 @@
 .editor-header, .diff-pane-header, .merge-header { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 14px; border-bottom: 1px solid #2b3140; background: #1d222e; color: #aeb7c8; font-size: 13px; font-weight: 600; }
 .editor-language { color: #7e9cff; text-transform: capitalize; } .editor-path { max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #7f899d; font-weight: 400; }
 .editor-wrapper { display: flex; height: 560px; }
-.line-numbers { flex: 0 0 48px; overflow: hidden; padding-top: 12px; border-right: 1px solid #252b38; color: #586274; text-align: right; font: 13px/1.55 var(--mono); user-select: none; }
+.line-numbers { flex: 0 0 48px; overflow: hidden; padding: 12px 0; border-right: 1px solid #252b38; color: #586274; text-align: right; font: 13px/20px var(--mono); user-select: none; }
 .line-number { height: 20px; padding-right: 10px; }
 .editor-content { position: relative; flex: 1; min-width: 0; overflow: hidden; }
-.highlighted-code, .editor-textarea { position: absolute; inset: 0; margin: 0; padding: 12px 14px; border: 0; font: 13px/1.55 var(--mono); white-space: pre; tab-size: 2; }
+.highlighted-code, .editor-textarea { position: absolute; inset: 0; margin: 0; padding: 12px 14px; border: 0; font: 13px/20px var(--mono); white-space: pre; tab-size: 2; }
 .highlighted-code { overflow: hidden; pointer-events: none; color: #d7dce5; } .editor-textarea { resize: none; outline: none; background: transparent; color: transparent; caret-color: #fff; }
 .editor-textarea::selection { background: rgb(109 140 255 / 32%); } .editor-textarea::placeholder { color: #626d81; opacity: 1; }
 .diff-container { flex: 1 1 0; min-height: 320px; display: flex; flex-direction: column; } .diff-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
