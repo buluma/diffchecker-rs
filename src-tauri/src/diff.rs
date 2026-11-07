@@ -535,13 +535,11 @@ pub fn compute_diff(
         .collect();
 
     // Compute LCS at line level using Myers
-    let lcs = match compute_myers_matches(&orig_normalized, &changed_normalized, |a, b| a == b) {
-        Ok(matches) => matches,
-        Err(_) => {
-            // Fallback to simple positional alignment
-            Vec::new()
-        }
-    };
+    let (lcs, simplified) =
+        match compute_myers_matches(&orig_normalized, &changed_normalized, |a, b| a == b) {
+            Ok(matches) => (matches, false),
+            Err(_) => (Vec::new(), true),
+        };
 
     let mut lines = Vec::new();
     let mut orig_idx = 0;
@@ -557,7 +555,7 @@ pub fn compute_diff(
     };
 
     let mut warning = None;
-    if lcs.is_empty() && !orig_normalized.is_empty() && !changed_normalized.is_empty() {
+    if simplified {
         warning = Some("Used simplified alignment because the inputs differ too extensively for a precise diff.".to_string());
     }
 
@@ -775,6 +773,18 @@ mod tests {
 
     fn default_options() -> DiffOptions {
         DiffOptions::default()
+    }
+
+    #[test]
+    fn packaged_sample_comparison() {
+        let result = compute_diff(
+            "package qualification alpha",
+            "package qualification beta",
+            &default_options(),
+        )
+        .unwrap();
+        assert_eq!(result.stats.modified, 1);
+        assert!(result.warning.is_none());
     }
 
     #[test]

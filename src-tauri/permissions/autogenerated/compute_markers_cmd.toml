@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-compute-markers-cmd"
+description = "Enables the compute_markers_cmd command without any pre-configured scope."
+commands.allow = ["compute_markers_cmd"]
+
+[[permission]]
+identifier = "deny-compute-markers-cmd"
+description = "Denies the compute_markers_cmd command without any pre-configured scope."
+commands.deny = ["compute_markers_cmd"]

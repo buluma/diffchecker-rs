@@ -90,7 +90,7 @@ export function useDiff() {
         }
         if (!cancelled) finish(result);
       } catch (error) {
-        if (!cancelled) finish(undefined, error instanceof Error ? error.message : 'The comparison could not be completed.');
+        if (!cancelled) finish(undefined, error instanceof Error ? error.message : String(error));
       }
     }, delay);
 

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-compute-diff-cmd"
+description = "Enables the compute_diff_cmd command without any pre-configured scope."
+commands.allow = ["compute_diff_cmd"]
+
+[[permission]]
+identifier = "deny-compute-diff-cmd"
+description = "Denies the compute_diff_cmd command without any pre-configured scope."
+commands.deny = ["compute_diff_cmd"]
