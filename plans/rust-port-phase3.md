@@ -1,5 +1,7 @@
 # Rust Port Plan: Phase 3 — Language Detection, Merge, Markers
 
+> Status: implemented and merged. See [Rust port status](rust-port-status.md) for qualification and remaining work.
+
 ## Objective
 Port the remaining TypeScript utilities to Rust:
 - Language detection (`src/utils/language.ts`)
@@ -11,13 +13,13 @@ Port the remaining TypeScript utilities to Rust:
 ## Scope
 
 ### In Scope (Phase 3)
-- [ ] Port `detectLanguageFromPath` and `detectLanguageFromContent` to Rust
-- [ ] Port `buildMergedContent` to Rust
-- [ ] Port `groupKind`, `toMarkers`, `ChangeMarker` to Rust
-- [ ] Add Tauri commands for each
-- [ ] Update frontend to use Rust implementations
-- [ ] Keep TS fallbacks for web builds
-- [ ] Port/update tests
+- [x] Port `detectLanguageFromPath` and `detectLanguageFromContent` to Rust
+- [x] Port `buildMergedContent` to Rust
+- [x] Port `groupKind`, `toMarkers`, `ChangeMarker` to Rust
+- [x] Add Tauri commands for each
+- [x] Update frontend to use Rust implementations
+- [x] Keep TS fallbacks for web builds
+- [x] Port/update tests
 
 ### Out of Scope
 - None (this completes the core port)
