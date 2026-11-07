@@ -225,6 +225,14 @@ async fn highlight_code_cmd(code: String, language: String) -> Result<String, St
 }
 
 #[tauri::command]
+async fn highlight_fragments_cmd(
+    lines: Vec<String>,
+    language: String,
+) -> Result<Vec<String>, String> {
+    crate::highlight::highlight_fragments(&lines, &language)
+}
+
+#[tauri::command]
 async fn detect_language_cmd(path: Option<String>, content: String) -> Result<String, String> {
     let lang = if let Some(path) = path {
         detect_language_from_path(Some(&path))
@@ -282,6 +290,7 @@ pub fn run() {
             set_save_history,
             compute_diff_cmd,
             highlight_code_cmd,
+            highlight_fragments_cmd,
             detect_language_cmd,
             build_merged_content_cmd,
             compute_markers_cmd,
