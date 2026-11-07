@@ -15,6 +15,14 @@
     "allow-remove-history",
     "allow-clear-history",
     "allow-get-save-history",
-    "allow-set-save-history"
+    "allow-set-save-history",
+    "allow-compute-diff-cmd",
+    "allow-filter-diff-indices-cmd",
+    "allow-format-diff-cmd",
+    "allow-highlight-code-cmd",
+    "allow-highlight-fragments-cmd",
+    "allow-detect-language-cmd",
+    "allow-build-merged-content-cmd",
+    "allow-compute-markers-cmd"
   ]
 }
