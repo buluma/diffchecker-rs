@@ -31,3 +31,18 @@ describe('Editor file drop', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe('large editor rendering', () => {
+  it('renders a bounded window and updates it when the textarea scrolls', () => {
+    const content = Array.from({ length: 10_000 }, (_, i) => `line ${i + 1}`).join('\n');
+    const { container } = render(<Editor file={{ ...emptyFile, content }} onChange={vi.fn()} />);
+    const textarea = screen.getByRole('textbox');
+    expect(container.querySelectorAll('.highlighted-line').length).toBeLessThan(100);
+    expect(container.querySelector('.highlighted-code')).toHaveTextContent('line 1');
+    Object.defineProperty(textarea, 'clientHeight', { value: 560 });
+    fireEvent.scroll(textarea, { target: { scrollTop: 20 * 5000 } });
+    expect(container.querySelectorAll('.highlighted-line').length).toBeLessThan(100);
+    expect(container.querySelector('.highlighted-code')).toHaveTextContent('line 5001');
+    expect(container.querySelector('.line-numbers')).toHaveTextContent('5001');
+  });
+});
