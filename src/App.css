@@ -255,3 +255,9 @@
 .spinner { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border: 2px solid #384052; border-top-color: #7e9cff; border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
 .token-keyword { color: #c792ea; } .token-string { color: #c3e88d; } .token-number { color: #f78c6c; } .token-comment { color: #697386; } .token-operator { color: #89ddff; } .token-punctuation { color: #aeb7c8; }
 @media (max-width: 900px) { .toolbar { padding: 10px 12px; } .toolbar-divider { display: none; } .toolbar-options { flex-basis: 100%; flex-wrap: wrap; } .toolbar-stats { margin-left: 0; } .main-content { padding: 12px; } .editor-pair, .diff-sbs-header, .diff-row { grid-template-columns: 1fr; } .editor-wrapper, .diff-pane-content { height: 420px; } .diff-side-by-side { min-height: 420px; } .status-bar { align-items: flex-start; flex-direction: column; gap: 2px; padding: 8px 12px; } .status-center { display: block; width: 100%; } .status-item { display: block; } .status-right { text-align: left; } }
+
+/* Fixed heights allow large unwrapped comparisons to render a window of rows. */
+.diff-view-virtual .diff-side-by-side, .diff-view-virtual .diff-pane-content { font: 13px/20px var(--mono); }
+.diff-view-virtual .diff-row, .diff-view-virtual .diff-line.unified { height: 20px; overflow: hidden; }
+.diff-view-virtual .diff-line.unified.diff-modified { height: 40px; }
+.diff-view-virtual .merge-button { height: 18px; line-height: 16px; padding: 0 6px; }
