@@ -330,6 +330,9 @@ const MAX_INLINE_DIFF_CELLS = 4_000_000;
  * Main diff function - compares two texts and returns structured diff result
  */
 export function computeDiff(originalText: string, changedText: string, options: DiffOptions): DiffResult {
+  if (!originalText && !changedText) {
+    return { lines: [], stats: { added: 0, removed: 0, modified: 0, unchanged: 0 }, warning: null };
+  }
   const inputError = getInputLimitError(originalText) ?? getInputLimitError(changedText);
   if (inputError) throw new DiffLimitError(inputError);
 
