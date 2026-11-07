@@ -100,10 +100,23 @@ export function useDiff() {
     };
   }, [isComparing, originalFile.content, changedFile.content, options]);
 
+  const [desktopFilter, setDesktopFilter] = useState<{ lines: DiffResult['lines']; options: DiffOptions; indices: number[] }>();
+  useEffect(() => {
+    if (!isTauri() || !diffResult) return;
+    let cancelled = false;
+    void invoke<number[]>('filter_diff_indices_cmd', { lines: diffResult.lines, options })
+      .then(indices => { if (!cancelled) setDesktopFilter({ lines: diffResult.lines, options, indices }); })
+      .catch(() => { if (!cancelled) setDesktopFilter(undefined); });
+    return () => { cancelled = true; };
+  }, [diffResult, options]);
+
   const filteredLines = useMemo(() => {
     if (!diffResult) return [];
+    if (desktopFilter?.lines === diffResult.lines && desktopFilter.options === options) {
+      return desktopFilter.indices.map(index => diffResult.lines[index]);
+    }
     return filterDiffLines(diffResult.lines, options);
-  }, [diffResult, options]);
+  }, [diffResult, options, desktopFilter]);
 
   const updateSide = useCallback((side: 'original' | 'changed', content: string, path: string | null) => {
     const error = getInputLimitError(content);

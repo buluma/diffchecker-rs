@@ -1,3 +1,4 @@
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Editor } from './Editor';
 import { DiffView } from './DiffView';
@@ -96,10 +97,11 @@ export function App() {
   const handleSave = useCallback(async () => {
     const desktopAPI = getDesktopAPI();
     if (desktopAPI) {
-      const content = mergeMode ? mergedContent :
-        options.viewMode === 'unified' ? buildUnifiedOutput(filteredLines) : buildSideBySideOutput(filteredLines);
       const suggestedName = `diff-${new Date().toISOString().split('T')[0]}.txt`;
       try {
+        const content = mergeMode ? mergedContent : isTauri()
+          ? await invoke<string>('format_diff_cmd', { lines: filteredLines, mode: options.viewMode })
+          : options.viewMode === 'unified' ? buildUnifiedOutput(filteredLines) : buildSideBySideOutput(filteredLines);
         await desktopAPI.saveFile(content, suggestedName);
       } catch (error) {
         reportInputError(error instanceof Error ? error.message : String(error));
