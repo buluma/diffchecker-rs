@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DiffView } from './DiffView';
 import { computeDiff } from '../utils/diff';
@@ -268,5 +268,47 @@ describe('DiffView change markers', () => {
     const { container } = setup({ original: 'same', changed: 'same' });
 
     expect(container.querySelector('.diff-ruler')).toBeNull();
+  });
+});
+
+describe('large diff virtualization', () => {
+  const original = Array.from({ length: 10_000 }, (_, i) => `line ${i}`).join('\n');
+  const changed = original.replace('line 9000\n', 'changed 9000\n');
+  const lines = computeDiff(original, changed, DEFAULT_DIFF_OPTIONS).lines;
+
+  it('bounds rendered rows and navigates to an off-screen change', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<DiffView lines={lines} options={DEFAULT_DIFF_OPTIONS} originalLanguage="plaintext" changedLanguage="plaintext" />);
+    const pane = container.querySelector('.diff-side-by-side') as HTMLElement;
+    Object.defineProperty(pane, 'clientHeight', { configurable: true, value: 600 });
+    expect(container.querySelectorAll('.diff-row').length).toBeLessThan(100);
+    await user.click(screen.getByRole('button', { name: 'Next change' }));
+    expect(pane.scrollTop).toBeGreaterThan(170_000);
+    expect(container.textContent).toContain('changed 9000');
+    expect(container.querySelectorAll('.diff-row').length).toBeLessThan(100);
+    fireEvent.scroll(pane, { target: { scrollTop: 0 } });
+    expect(container.textContent).toContain('line 0');
+  });
+
+  it('offers all lines for search and retains the full renderer for wrapping', async () => {
+    const user = userEvent.setup();
+    const view = render(<DiffView lines={lines.slice(0, 600)} options={DEFAULT_DIFF_OPTIONS} originalLanguage="plaintext" changedLanguage="plaintext" />);
+    await user.click(screen.getByLabelText('Show all lines for search and accessibility'));
+    expect(view.container.querySelectorAll('.diff-row')).toHaveLength(600);
+    view.unmount();
+    const wrapped = render(<DiffView lines={lines.slice(0, 501)} options={{ ...DEFAULT_DIFF_OPTIONS, wrapLines: true }} originalLanguage="plaintext" changedLanguage="plaintext" />);
+    expect(wrapped.container.querySelectorAll('.diff-row')).toHaveLength(501);
+  });
+
+  it('uses two row heights for modified lines in unified view', async () => {
+    const user = userEvent.setup();
+    const options = { ...DEFAULT_DIFF_OPTIONS, viewMode: 'unified' as const };
+    const { container } = render(<DiffView lines={lines} options={options} originalLanguage="plaintext" changedLanguage="plaintext" />);
+    const pane = container.querySelector('.diff-pane-content') as HTMLElement;
+    Object.defineProperty(pane, 'clientHeight', { configurable: true, value: 600 });
+    await user.click(screen.getByRole('button', { name: 'Next change' }));
+    expect(pane.scrollTop).toBeGreaterThan(170_000);
+    expect(container.textContent).toContain('changed 9000');
+    expect(container.querySelectorAll('.diff-line.unified').length).toBeLessThan(100);
   });
 });
