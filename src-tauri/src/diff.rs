@@ -38,8 +38,7 @@ fn normalize_line(line: &str, options: &DiffOptions) -> String {
 
     for rule in &options.custom_ignore_rules {
         if !rule.is_empty() {
-            let re = regex::Regex::new(rule).unwrap_or_else(|_| regex::Regex::new("").unwrap());
-            normalized = re.replace_all(&normalized, "").to_string();
+            normalized = normalized.replace(rule, "");
         }
     }
 
@@ -193,11 +192,7 @@ where
             diagonal - 1
         };
         let previous_x = previous.get(&previous_diagonal).copied().unwrap_or(0);
-        let previous_y = if previous_x as isize > previous_diagonal {
-            previous_x - previous_diagonal as usize
-        } else {
-            0
-        };
+        let previous_y = (previous_x as isize - previous_diagonal).max(0) as usize;
 
         while x > previous_x && y > previous_y {
             x -= 1;
@@ -886,6 +881,37 @@ mod tests {
     }
 
     #[test]
+    fn myers_matches_lcs_for_short_sequences() {
+        let sequences: Vec<Vec<u8>> = (0..31)
+            .map(|n: u32| {
+                let length = (n + 1).ilog2() as usize;
+                (0..length).map(|i| ((n + 1) >> i & 1) as u8).collect()
+            })
+            .collect();
+        for original in &sequences {
+            for changed in &sequences {
+                let matches = compute_myers_matches(original, changed, |a, b| a == b).unwrap();
+                assert_eq!(
+                    matches.len(),
+                    compute_lcs(original, changed, |a, b| a == b).len(),
+                    "{original:?} vs {changed:?}"
+                );
+                assert!(matches.iter().all(|&(a, b)| original[a] == changed[b]));
+                assert!(matches
+                    .windows(2)
+                    .all(|pair| pair[0].0 < pair[1].0 && pair[0].1 < pair[1].1));
+            }
+        }
+    }
+
+    #[test]
+    fn ignore_rules_are_literal() {
+        let mut options = default_options();
+        options.custom_ignore_rules = vec![".".to_string()];
+        assert_eq!(normalize_line("a.b", &options), "ab");
+    }
+
+    #[test]
     fn test_large_input_rejection() {
         let large = "a\n".repeat(MAX_INPUT_LINES + 1);
         let result = compute_diff(&large, "b", &default_options());
@@ -895,7 +921,7 @@ mod tests {
     #[test]
     fn test_custom_ignore_rules() {
         let mut options = default_options();
-        options.custom_ignore_rules = vec!["TIMESTAMP=.*".to_string()];
+        options.custom_ignore_rules = vec!["123".to_string(), "456".to_string()];
         let result =
             compute_diff("TIMESTAMP=123\nvalue", "TIMESTAMP=456\nvalue", &options).unwrap();
         assert_eq!(result.stats.unchanged, 2);
