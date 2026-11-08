@@ -27,3 +27,6 @@ release
 *.sln
 *.sw?
 /temp
+
+# Local plans
+/plans/

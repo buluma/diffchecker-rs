@@ -1,7 +1,9 @@
 pub mod diff;
 mod export;
 pub mod highlight;
+mod history;
 mod language;
+mod limits;
 pub mod markers;
 mod merge;
 mod store;
@@ -17,7 +19,9 @@ use tauri_plugin_dialog::DialogExt;
 
 use crate::diff::compute_diff;
 use crate::highlight::highlight_code;
+use crate::history::{describe_recent_file, describe_side};
 use crate::language::{detect_language_from_content, detect_language_from_path};
+use crate::limits::{get_input_limit_error, DiffLimitError};
 use crate::markers::{group_kind, to_markers, ChangeMarker, GroupPosition};
 use crate::merge::{build_merged_content, MergeChoice};
 use crate::store::{
@@ -300,6 +304,23 @@ async fn compute_markers_cmd(
     Ok(to_markers(&groups, scroll_height))
 }
 
+#[tauri::command]
+fn describe_recent_file_cmd(path: String) -> String {
+    describe_recent_file(&path)
+}
+
+#[tauri::command]
+fn describe_history_side_cmd(side: HistorySide) -> String {
+    describe_side(&side)
+}
+
+#[tauri::command]
+fn validate_input_cmd(content: String) -> Result<(), DiffLimitError> {
+    get_input_limit_error(&content)
+        .map(Err)
+        .unwrap_or(Ok(()))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -323,6 +344,9 @@ pub fn run() {
             detect_language_cmd,
             build_merged_content_cmd,
             compute_markers_cmd,
+            describe_recent_file_cmd,
+            describe_history_side_cmd,
+            validate_input_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Diffchecker");

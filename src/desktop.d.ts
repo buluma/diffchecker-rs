@@ -1,4 +1,4 @@
-import type { HistoryAddResult, HistoryEntry, RecentFile } from './types/history';
+import type { HistoryAddResult, HistoryEntry, HistorySide, RecentFile } from './types/history';
 import type { DiffLine } from './types/diff';
 
 type OpenFileResult = { path: string; content: string } | { error: string };
@@ -17,6 +17,9 @@ interface DesktopAPI {
   setSaveHistory: (enabled: boolean) => Promise<boolean>;
   detectLanguage: (path: string | null, content: string) => Promise<string>;
   buildMergedContent: (lines: DiffLine[], choices: Record<number, 'left' | 'right'>) => Promise<string>;
+  describeRecentFile: (path: string) => Promise<string>;
+  describeHistorySide: (side: HistorySide) => Promise<string>;
+  validateInput: (content: string) => Promise<void>;
 }
 
 declare global {
