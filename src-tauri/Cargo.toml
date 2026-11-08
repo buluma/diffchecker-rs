@@ -1,6 +1,6 @@
 [package]
 name = "diffchecker"
-version = "1.0.6"
+version = "1.0.7"
 description = "A local text and code comparison tool"
 authors = ["Diffchecker maintainers"]
 edition = "2021"
