@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-describe-history-side-cmd"
+description = "Enables the describe_history_side_cmd command without any pre-configured scope."
+commands.allow = ["describe_history_side_cmd"]
+
+[[permission]]
+identifier = "deny-describe-history-side-cmd"
+description = "Denies the describe_history_side_cmd command without any pre-configured scope."
+commands.deny = ["describe_history_side_cmd"]

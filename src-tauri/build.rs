@@ -20,6 +20,9 @@ fn main() {
             "detect_language_cmd",
             "build_merged_content_cmd",
             "compute_markers_cmd",
+            "describe_recent_file_cmd",
+            "describe_history_side_cmd",
+            "validate_input_cmd",
         ]),
     ))
     .expect("failed to build Tauri application");
