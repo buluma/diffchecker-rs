@@ -13,8 +13,8 @@ Tauri v2 app with a Rust backend.
   Rust; expose only narrowly scoped commands.
 - `public/` contains files copied into the build, such as `favicon.svg` and
   `icons.svg`.
-- Root `*.config.*` and `tsconfig*.json` files define Vite, TypeScript, and lint
-  behavior.
+- Root `*.config.*`, `.oxlintrc.json`, and `tsconfig*.json` files define Vite,
+  TypeScript, and lint behavior.
 
 ## Build, Test, and Development Commands
 
@@ -26,7 +26,7 @@ Run `bun install` after checkout.
   renderer build in `dist/`.
 - `bun run build:desktop` builds the renderer and packages the desktop app
   through Tauri.
-- `bun run lint` runs the renderer and build-configuration TypeScript checks.
+- `bun run lint` runs renderer TypeScript checks and oxlint.
 - `bun run test` runs the Vitest suite.
 - `cargo test --manifest-path src-tauri/Cargo.toml` runs the Rust test suite.
 - `bun run preview` serves the built renderer locally for inspection.

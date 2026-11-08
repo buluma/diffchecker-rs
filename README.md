@@ -26,7 +26,7 @@ warning. History stores inputs up to 1 MiB per side.
 
 ## Requirements
 
-- Bun as pinned in `.bun-version`
+- Bun version from `.bun-version`
 - Rust toolchain for the Tauri desktop app
 - Debian or Ubuntu system libraries for Linux desktop builds:
 
@@ -64,7 +64,7 @@ provided by the Rust desktop backend.
 ```sh
 bun run build          # Type-check and build the renderer
 bun run build:desktop # Build the renderer and package the desktop app
-bun run lint           # Type-check the renderer and build configuration
+bun run lint           # Type-check and lint the renderer and build configuration
 bun run test           # Run Vitest
 ```
 
