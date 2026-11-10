@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:bbe995271bcc30b5d20ee2cf6214d697fc8afb6eb9765e75a4dfa472614ebc90",
+  "claims": [
+    {
+      "id": "claim_b13e459ceea04d1ba2774b8397214263",
+      "statement": "Both Rust (src-tauri/src/diff.rs) and TypeScript (src/utils/diff.ts) implement the Myers O(ND) diff algorithm with identical structure: normalize lines per options → Myers on normalized lines → gap alignment with Dice-coefficient similarity (threshold 0.5) → emit DiffLine[] with stats.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b42276558ae42378f15ba44b8283a2a",
+      "statement": "Myers complexity is bounded by MAX_MYERS_TRACE_CELLS=200k and MAX_MYERS_WORK=2M; exceeding limits triggers fallback to simplified positional alignment (all lines Added/Removed) with a warning in DiffResult.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_cba16bf38a7a4515a4c1de75f8ce1ebd",
+      "statement": "Inline character/word diffs use LCS on characters or whitespace-delimited words; precision modes: Character, Word, Smart (auto-selects Character for short lines/numbers/special chars, Word otherwise); capped at MAX_INLINE_DIFF_CELLS=4M.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_db0842c48b0441d781e4822fea7d5b05",
+      "statement": "Modified line pairing in gaps uses Dice coefficient on character bigrams (MIN_LINE_SIMILARITY=0.5); large gaps (removed×added > MAX_GAP_COMPARISONS=100k) fall back to positional-only pairing.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0a52ff95a94405f87022e0672068d46",
+      "statement": "Diff parity is validated by shared fixtures in src/utils/diff-parity-fixtures.json loaded by both Rust tests (shared_browser_and_desktop_fixtures) and TypeScript property-based tests (250 random sequences verifying LCS optimality).",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff-parity-fixtures.json",
+          "version": "repo-file-v1:sha256:abe2d4abc4f7a7ac94ff53742648768588561f7318bb7b5029a0151b1f35f3e8"
+        },
+        {
+          "resource": "repo://src/utils/diff.test.ts",
+          "version": "repo-file-v1:sha256:e89485023fb6536fa55939b662cec23d55c6a9791cca5a89ec1cf8a2098995e4"
+        }
+      ]
+    },
+    {
+      "id": "claim_574d7b56ee854ba2b79cd3bc0a02087f",
+      "statement": "filterDiffLines implements 'hide unchanged' with 3 lines of context around each change; used by DiffView for virtualized rendering when options.hideUnchangedLines is true.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/components/DiffView.tsx",
+          "version": "repo-file-v1:sha256:26bbcd8a6f439be4b8125fa7ac23f43f7837059c48715a1cf8b8d04c5e7e5c0a"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

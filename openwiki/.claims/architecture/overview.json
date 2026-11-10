@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0e4f146cbf0f5a07c3f104e1aaa00f67d84468cc33a80ecbf9f26b84a8220096",
+  "claims": [
+    {
+      "id": "claim_d952ed726a07467c8ab0024069d7136b",
+      "statement": "diffchecker-rs uses a two-process Tauri v2 architecture: a React 19 + TypeScript renderer in a WebView and a Rust main process exposing 20 capability-scoped Tauri commands for file I/O, diff computation, highlighting, merge, history, and settings.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/capabilities/default.json",
+          "version": "repo-file-v1:sha256:a0b6a3a16b3af78f6f1e4c4cda550b91988958431d80ff3410624e6e435f2dd6"
+        },
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_a91313462df74b5684d06b727321a3d8",
+      "statement": "The build pipeline uses Vite 8 for the renderer (output to dist/), cargo/tauri-cli for the Rust backend, and bun as package manager; `bun run dev:desktop` runs both with hot reload, `bun run build:desktop` produces platform installers.",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://src-tauri/build.rs",
+          "version": "repo-file-v1:sha256:db785a724caf9cdc62ca564a30ab3aafd6933f12eeb82b4672d3ffdeb7909c41"
+        },
+        {
+          "resource": "repo://vite.config.ts",
+          "version": "repo-file-v1:sha256:aff3bc16ba740e45bb4a6a0cd5f76a479ac934a45c9df060f921b2f710b243ad"
+        }
+      ]
+    },
+    {
+      "id": "claim_7bde71ffc24c49fba7b29c1e2a7da373",
+      "statement": "All frontend-backend communication goes through Tauri commands via @tauri-apps/api/core::invoke(), with a typed DesktopAPI abstraction in src/platform/desktop.ts that gracefully degrades to web fallbacks (file input, local diff, highlight.js) when not in Tauri.",
+      "evidence": [
+        {
+          "resource": "repo://src/hooks/useDiff.ts",
+          "version": "repo-file-v1:sha256:bec59eb4f083808698a62cb46e85b3372d148a744d776aa9357f8a5fda20f54d"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e1ac79c592140ab868e38f691c1c555",
+      "statement": "Shared types are single-sourced in Rust (src-tauri/src/types.rs) and exported via ts-rs to src/types/diff-generated.ts at build time, guaranteeing compile-time parity for DiffLine, DiffOptions, DiffResult, DiffType, CharDiff, DiffPrecision, DiffViewMode, FileContent, and DiffLimitError.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/types.rs",
+          "version": "repo-file-v1:sha256:e9fa28013e19013e648cae67ab62e124f454aab5cb2bcb9787f774e08db02c99"
+        },
+        {
+          "resource": "repo://src/types/diff.ts",
+          "version": "repo-file-v1:sha256:fa740e3c0987bc56131dca41f76b257903fda8cfae76766b06cd6838724828b7"
+        }
+      ]
+    },
+    {
+      "id": "claim_7a79022f7b904c1cb2a521db149e4633",
+      "statement": "The security model restricts the renderer to zero filesystem access; all I/O goes through validated Rust commands with size limits (5 MiB/10k lines), path checks, and capability-scoped permissions in src-tauri/capabilities/default.json; the app works fully offline with no network access.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/capabilities/default.json",
+          "version": "repo-file-v1:sha256:a0b6a3a16b3af78f6f1e4c4cda550b91988958431d80ff3410624e6e435f2dd6"
+        },
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src-tauri/src/limits.rs",
+          "version": "repo-file-v1:sha256:a1a6d735f7b3999d29d333bf803f937b09218521711cf78cc41907295884de23"
+        }
+      ]
+    },
+    {
+      "id": "claim_b79f8bbc4d314bff8b9f8ce43035b332",
+      "statement": "Local data (recent files max 10, history max 20 entries/20 MiB, settings) persists in ~/.config/diffchecker-desktop/ via atomic JSON writes with backup/rollback in store.rs, maintaining compatibility with the prior Electron app location.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

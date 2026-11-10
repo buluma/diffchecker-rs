@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4a52dc6075686c9aff9577dac2d838b334b4dd76570f262701e825ea59d02482",
+  "claims": [
+    {
+      "id": "claim_aa8e133e505f4d84b5a36c3427d0464c",
+      "statement": "Development uses `bun run dev:desktop` for hot-reload on both renderer (Vite HMR) and Rust (tauri dev watches src-tauri/); `bun run build` runs tsc -b + vite build; `bun run build:desktop` produces platform installers via tauri build.",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://vite.config.ts",
+          "version": "repo-file-v1:sha256:aff3bc16ba740e45bb4a6a0cd5f76a479ac934a45c9df060f921b2f710b243ad"
+        }
+      ]
+    },
+    {
+      "id": "claim_d1cca8d69e0c44f5b25eb5077c2b59f6",
+      "statement": "Linting runs TypeScript project references (tsc -b) followed by oxlint with React/TypeScript plugins and rules-of-hooks enforcement; Rust uses cargo check/clippy manually.",
+      "evidence": [
+        {
+          "resource": "repo://.oxlintrc.json",
+          "version": "repo-file-v1:sha256:3f57e6767dfce234150336afaf8ea87b80fd3d8dbff498969437d2851b0acd52"
+        },
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://src-tauri/Cargo.toml",
+          "version": "repo-file-v1:sha256:64cb0df4f058d06f5df1a42db928a12032306e6b6b68384ade31f277d2fade54"
+        }
+      ]
+    },
+    {
+      "id": "claim_7e337a6e0b304d3b9c822aa89c5a10fe",
+      "statement": "Testing: `bun run test` runs Vitest with jsdom; `cargo test` runs Rust unit tests in src-tauri/src/; tests are colocated with source code.",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://src-tauri/Cargo.toml",
+          "version": "repo-file-v1:sha256:64cb0df4f058d06f5df1a42db928a12032306e6b6b68384ade31f277d2fade54"
+        },
+        {
+          "resource": "repo://vite.config.ts",
+          "version": "repo-file-v1:sha256:aff3bc16ba740e45bb4a6a0cd5f76a479ac934a45c9df060f921b2f710b243ad"
+        }
+      ]
+    },
+    {
+      "id": "claim_aef311c62f974216a5ec6ebec92cc450",
+      "statement": "Git workflow: short imperative commit subjects, focused commits, PRs explain user-visible change + validation commands + screenshots for UI; squash-merge to main; CI runs lint/test/build; tauri build --no-bundle for command/capability changes.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md",
+          "version": "repo-file-v1:sha256:ff96db92836cbaf6644f6b40f3a9608124c27ce196d4b7e6d81688cbca722e8f"
+        }
+      ]
+    },
+    {
+      "id": "claim_857ac6329a584fd9a884fc5dc4d201a1",
+      "statement": "Adding a Tauri command requires: (1) #[tauri::command] in lib.rs + build.rs registration, (2) allow-* permission in capabilities/default.json, (3) DesktopAPI entry in platform/desktop.ts, (4) invoke() call in hooks, (5) tests, (6) lint/build/dev:desktop validation.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/build.rs",
+          "version": "repo-file-v1:sha256:db785a724caf9cdc62ca564a30ab3aafd6933f12eeb82b4672d3ffdeb7909c41"
+        },
+        {
+          "resource": "repo://src-tauri/capabilities/default.json",
+          "version": "repo-file-v1:sha256:a0b6a3a16b3af78f6f1e4c4cda550b91988958431d80ff3410624e6e435f2dd6"
+        },
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

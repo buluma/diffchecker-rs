@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6947a9f35d356f7ab64f09bbcd4f63748481caa19d39780e4cb583952ed450a3",
+  "claims": [
+    {
+      "id": "claim_b91197302d6e412ab99d4e030395871f",
+      "statement": "Prerequisites: Bun (per .bun-version), Rust stable, Linux system libs (webkit2gtk, ssl, etc.); installation via `bun install`; Rust deps auto-fetched.",
+      "evidence": [
+        {
+          "resource": "repo://.bun-version",
+          "version": "repo-file-v1:sha256:3862f5361ca1a8c053364af5b6b2df9b900325487f4f7b3e6cd13d98345848ef"
+        },
+        {
+          "resource": "repo://README.md",
+          "version": "repo-file-v1:sha256:20ac8b230e3a124e44d293aee32d04821eb20cbebee93607151940229c4ae581"
+        },
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb1a0c75db424abda2bb5690df619333",
+      "statement": "Project structure: src/ (React 19 + TS renderer with components, hooks, platform, utils, types), src-tauri/ (Rust backend with lib.rs, diff.rs, merge.rs, highlight.rs, store.rs, types.rs, build.rs, capabilities), public/, config files.",
+      "evidence": [
+        {
+          "resource": "repo://README.md",
+          "version": "repo-file-v1:sha256:20ac8b230e3a124e44d293aee32d04821eb20cbebee93607151940229c4ae581"
+        },
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://src-tauri/Cargo.toml",
+          "version": "repo-file-v1:sha256:64cb0df4f058d06f5df1a42db928a12032306e6b6b68384ade31f277d2fade54"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d14689b8eb44e4d93e64c1aca3c7958",
+      "statement": "Development commands: `dev` (web), `dev:desktop` (full hot reload), `build` (renderer), `build:desktop` (installers), `lint` (tsc + oxlint), `test` (Vitest), `cargo test` (Rust).",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://vite.config.ts",
+          "version": "repo-file-v1:sha256:aff3bc16ba740e45bb4a6a0cd5f76a479ac934a45c9df060f921b2f710b243ad"
+        }
+      ]
+    },
+    {
+      "id": "claim_77c20ef308e04dbd822fce7afe8a1d63",
+      "statement": "Testing: `bun run test` (Vitest jsdom), `cargo test` (Rust inline tests); both run in CI.",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        },
+        {
+          "resource": "repo://src-tauri/Cargo.toml",
+          "version": "repo-file-v1:sha256:64cb0df4f058d06f5df1a42db928a12032306e6b6b68384ade31f277d2fade54"
+        }
+      ]
+    },
+    {
+      "id": "claim_83a44333a1764c9f80649a0566760f57",
+      "statement": "Web vs Desktop: web has compare/merge/highlight/drag-drop; desktop adds native dialogs, recent files, history, settings persistence via Tauri commands.",
+      "evidence": [
+        {
+          "resource": "repo://README.md",
+          "version": "repo-file-v1:sha256:20ac8b230e3a124e44d293aee32d04821eb20cbebee93607151940229c4ae581"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

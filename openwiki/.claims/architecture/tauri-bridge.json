@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5a8f87712a173247ce5216dc54f1064e8b1306d90df1006c1d70fe637e81d1f0",
+  "claims": [
+    {
+      "id": "claim_b9b9f5826a9940c1b5b80e918435223a",
+      "statement": "Commands are registered at compile time in src-tauri/build.rs via tauri_build::AppManifest::new().commands([...]) listing all 20 command names, generating IPC bindings.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/build.rs",
+          "version": "repo-file-v1:sha256:db785a724caf9cdc62ca564a30ab3aafd6933f12eeb82b4672d3ffdeb7909c41"
+        }
+      ]
+    },
+    {
+      "id": "claim_725bf13875c54288a11bb00dd974fc6b",
+      "statement": "Every command has an explicit allow-* permission in src-tauri/capabilities/default.json (e.g., allow-compute-diff-cmd, allow-open-file), ensuring a narrow, auditable command surface in packaged builds.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/capabilities/default.json",
+          "version": "repo-file-v1:sha256:a0b6a3a16b3af78f6f1e4c4cda550b91988958431d80ff3410624e6e435f2dd6"
+        }
+      ]
+    },
+    {
+      "id": "claim_5fbe6531646249bd8e4dbbf81644bfcf",
+      "statement": "The DesktopAPI interface in src/platform/desktop.ts wraps all 20 Tauri commands with typed signatures, using @tauri-apps/api/core::invoke() with snake_case command names and camelCase argument objects matching Rust parameter names.",
+      "evidence": [
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f97573ec5644241916b5b2781e1ff8b",
+      "statement": "getDesktopAPI() returns the Tauri implementation when isTauri() is true, a pre-injected window.desktopAPI for testing, or undefined on the web, enabling graceful degradation to browser fallbacks (file input, local diff, highlight.js).",
+      "evidence": [
+        {
+          "resource": "repo://src/hooks/useDiff.ts",
+          "version": "repo-file-v1:sha256:bec59eb4f083808698a62cb46e85b3372d148a744d776aa9357f8a5fda20f54d"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c0711b6784a4455b34590ed6e0dad7f",
+      "statement": "Rust command handlers validate all arguments: file operations use native dialogs with path checks, diff commands enforce 5 MiB/10k line limits via validate_input_cmd, history enforces 1 MiB per side and 20 MiB total, and open_recent_file verifies the path is still in the recent list.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src-tauri/src/limits.rs",
+          "version": "repo-file-v1:sha256:a1a6d735f7b3999d29d333bf803f937b09218521711cf78cc41907295884de23"
+        },
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        }
+      ]
+    },
+    {
+      "id": "claim_d189231884794514a25b78b160440838",
+      "statement": "Web fallback mirrors Rust limits in src/utils/limits.ts and uses local implementations: computeDiff() for diff, highlight.js for syntax highlighting, and <input type=\"file\"> for file operations; recent files and history are unavailable on web.",
+      "evidence": [
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        },
+        {
+          "resource": "repo://src/utils/highlight.ts",
+          "version": "repo-file-v1:sha256:60a364ee2677786890f5b985c79189626d08d66a85efe08471f4da700ef017bd"
+        },
+        {
+          "resource": "repo://src/utils/limits.ts",
+          "version": "repo-file-v1:sha256:3d8b0703bd18e8d75a5802fbb3de840ae760e9a45bd33f98fec59794ff48fa75"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}
