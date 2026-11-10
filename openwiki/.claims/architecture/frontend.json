@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:424fc87983380ab478994605aa4b1e2b3796ecd27004fd9169ba646311a488fb",
+  "claims": [
+    {
+      "id": "claim_a4307bfa550c488d885d3340a9d24854",
+      "statement": "The frontend component hierarchy centers on App (src/components/App.tsx) which composes Toolbar, DiffView/Editor pair, HistoryPanel, and StatusBar, with merge mode replacing the diff view with an editable merged result Editor.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/App.tsx",
+          "version": "repo-file-v1:sha256:74760391515e31482ea852076b398a7eff7da9ef629fbe5c5f36c8aa100d3c6a"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a6fad022dde42c2945b0c373d05ebe3",
+      "statement": "Three custom hooks encapsulate core behavior: useDiff manages files, options, diff computation (debounced 150ms), language detection, and compare/restore actions; useLocalData bridges recent files and history from the Tauri backend; useHighlightedLines batches syntax highlighting via highlight_fragments_cmd (desktop) or highlight.js (web).",
+      "evidence": [
+        {
+          "resource": "repo://src/hooks/useDiff.ts",
+          "version": "repo-file-v1:sha256:bec59eb4f083808698a62cb46e85b3372d148a744d776aa9357f8a5fda20f54d"
+        },
+        {
+          "resource": "repo://src/hooks/useHighlightedLines.ts",
+          "version": "repo-file-v1:sha256:02c0f892c978d50d92a1046a8f08e992d1013793d4455958a4ba15e362a8d0dc"
+        },
+        {
+          "resource": "repo://src/hooks/useLocalData.ts",
+          "version": "repo-file-v1:sha256:2129fcee4cac3961a51bfba3b32eea3a09572affe6ee477ab4b340a1237cc3ca"
+        }
+      ]
+    },
+    {
+      "id": "claim_eeccff51ab5b4729a739ff19fc92b60a",
+      "statement": "The platform abstraction (src/platform/desktop.ts) defines a typed DesktopAPI wrapping all 20 Tauri commands, with graceful degradation to web fallbacks (file input, local diff, highlight.js) when not in Tauri.",
+      "evidence": [
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_b77e4a84a03b45139e6e9f34e99c9ec7",
+      "statement": "The Myers diff implementation (src/utils/diff.ts) uses O(ND) algorithm with bounded trace cells (200k) and work (2M), supports line/word/character precision with smart auto-selection, custom ignore rules, and inline char/word diffs via LCS with a 4M cell cap.",
+      "evidence": [
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7e2b19c38c7480cae3ced23a5eeaae5",
+      "statement": "DiffView (src/components/DiffView.tsx) implements virtualized rendering for large diffs (500+ lines), side-by-side and unified views, change-group navigation with minimap markers computed via compute_markers_cmd (desktop) or local fallback, collapsible unchanged sections, and per-line merge buttons.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/DiffView.tsx",
+          "version": "repo-file-v1:sha256:26bbcd8a6f439be4b8125fa7ac23f43f7837059c48715a1cf8b8d04c5e7e5c0a"
+        }
+      ]
+    },
+    {
+      "id": "claim_73b71474e74f450f94f3ec4b06504b63",
+      "statement": "Editor (src/components/Editor.tsx) overlays a syntax-highlighted pre block (via useHighlightedLines) on a textarea for editing, with virtualized line numbers, drag-and-drop file loading, and 5 MiB size validation mirroring Rust limits.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/Editor.tsx",
+          "version": "repo-file-v1:sha256:44ffc0aa686b0ab39b53cc92e502cfb47a1daaf682097fdef0547aaf142fb34a"
+        }
+      ]
+    },
+    {
+      "id": "claim_514dac5799fd41479167da3f04553ac0",
+      "statement": "Shared types are defined in Rust (src-tauri/src/types.rs) and exported via ts-rs to src/types/diff-generated.ts, guaranteeing compile-time parity for DiffLine, DiffOptions, DiffResult, DiffType, CharDiff, DiffPrecision, DiffViewMode, FileContent, and DiffLimitError.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/types.rs",
+          "version": "repo-file-v1:sha256:e9fa28013e19013e648cae67ab62e124f454aab5cb2bcb9787f774e08db02c99"
+        },
+        {
+          "resource": "repo://src/types/diff.ts",
+          "version": "repo-file-v1:sha256:fa740e3c0987bc56131dca41f76b257903fda8cfae76766b06cd6838724828b7"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

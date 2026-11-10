@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0f70cddc471a1e6d3585a7b73c7b6b8002829ebd450be3902bea2133a1bd0cb6",
+  "claims": [
+    {
+      "id": "claim_f5fa6bd2ec5f4b569ff8f4964e7868cf",
+      "statement": "Hard limits enforced identically in Rust (src-tauri/src/limits.rs) and TypeScript (src/utils/limits.ts): 5 MiB bytes, 10,000 lines per input; DiffLimitError returned with descriptive message.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/limits.rs",
+          "version": "repo-file-v1:sha256:a1a6d735f7b3999d29d333bf803f937b09218521711cf78cc41907295884de23"
+        },
+        {
+          "resource": "repo://src/utils/limits.ts",
+          "version": "repo-file-v1:sha256:3d8b0703bd18e8d75a5802fbb3de840ae760e9a45bd33f98fec59794ff48fa75"
+        }
+      ]
+    },
+    {
+      "id": "claim_926f5666b25e4666a1f9dc609fa03f9b",
+      "statement": "Myers O(ND) complexity bounded by MAX_MYERS_TRACE_CELLS=200k (distance²) and MAX_MYERS_WORK=2M (total visits); exceeding triggers fallback to simplified alignment (all Added/Removed, no Modified pairs) with warning in DiffResult.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_d67585c9951843f4a95f8b85b587cece",
+      "statement": "Inline char/word diff capped at MAX_INLINE_DIFF_CELLS=4M (orig_len × changed_len); gap alignment capped at MAX_GAP_COMPARISONS=100k (removed × added); both fall back to simpler behavior.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff.ts",
+          "version": "repo-file-v1:sha256:ee5432cdb364c88ff632dcd4bbb6c234c612d4558f78f2f3795767940203585a"
+        }
+      ]
+    },
+    {
+      "id": "claim_74bd045f716d4ec9929bcbe336e4d256",
+      "statement": "Performance: virtualized rendering (500+ lines), 150ms debounced diff recompute, requestId guards for stale async results, per-line highlight deduplication, memoized useHighlightedLines cache.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/DiffView.tsx",
+          "version": "repo-file-v1:sha256:26bbcd8a6f439be4b8125fa7ac23f43f7837059c48715a1cf8b8d04c5e7e5c0a"
+        },
+        {
+          "resource": "repo://src/components/Editor.tsx",
+          "version": "repo-file-v1:sha256:44ffc0aa686b0ab39b53cc92e502cfb47a1daaf682097fdef0547aaf142fb34a"
+        },
+        {
+          "resource": "repo://src/hooks/useDiff.ts",
+          "version": "repo-file-v1:sha256:bec59eb4f083808698a62cb46e85b3372d148a744d776aa9357f8a5fda20f54d"
+        },
+        {
+          "resource": "repo://src/hooks/useHighlightedLines.ts",
+          "version": "repo-file-v1:sha256:02c0f892c978d50d92a1046a8f08e992d1013793d4455958a4ba15e362a8d0dc"
+        }
+      ]
+    },
+    {
+      "id": "claim_aaad7befdd164bc5bfa8eac23fac8ba8",
+      "statement": "Limit enforcement at multiple layers: Editor drop/paste, file open (Rust metadata check + TS file.size), diff compute (both), history save (1MiB/side), validate_input_cmd for ad-hoc checks.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        },
+        {
+          "resource": "repo://src/components/Editor.tsx",
+          "version": "repo-file-v1:sha256:44ffc0aa686b0ab39b53cc92e502cfb47a1daaf682097fdef0547aaf142fb34a"
+        },
+        {
+          "resource": "repo://src/utils/limits.ts",
+          "version": "repo-file-v1:sha256:3d8b0703bd18e8d75a5802fbb3de840ae760e9a45bd33f98fec59794ff48fa75"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

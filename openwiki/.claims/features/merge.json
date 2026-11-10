@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4fb6ba84f6fb94fb95cef7dd2f495138a73c3f5e0c4ee99e4b077099df69a46b",
+  "claims": [
+    {
+      "id": "claim_682efd42d2ce4355ade3920160c3b81d",
+      "statement": "Both Rust (src-tauri/src/merge.rs) and TypeScript (src/utils/merge.ts) implement build_merged_content(lines, choices) with identical logic: Equal always included; Added excluded only on Left; Removed excluded only on Right; Modified picks original_content (Left) or content (Right); default (no choice) = Right behavior.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/merge.rs",
+          "version": "repo-file-v1:sha256:16316367744688ed7988eebe89f79ed16de06886110a09943f3360e472393de4"
+        },
+        {
+          "resource": "repo://src/utils/merge.ts",
+          "version": "repo-file-v1:sha256:09ddf674ed7cbd1ad50d8bdf6229620e2d85f49fb959e9d5b9814635afa771bd"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ae3f21e55df4930bbea10b4c79d872f",
+      "statement": "Tauri command build_merged_content_cmd exposes merge to frontend; web fallback uses local buildMergedContent; DiffView renders per-line merge buttons (→ for Left, ← for Right) on Added/Removed/Modified lines.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src/components/App.tsx",
+          "version": "repo-file-v1:sha256:74760391515e31482ea852076b398a7eff7da9ef629fbe5c5f36c8aa100d3c6a"
+        },
+        {
+          "resource": "repo://src/components/DiffView.tsx",
+          "version": "repo-file-v1:sha256:26bbcd8a6f439be4b8125fa7ac23f43f7837059c48715a1cf8b8d04c5e7e5c0a"
+        }
+      ]
+    },
+    {
+      "id": "claim_87522c3645514c52938d8adfdb5ba34e",
+      "statement": "Merge mode state in App.tsx: mergeChoices Record<lineIndex, MergeChoice> updated on button click; mergedContent debounced via invoke() with requestId guard; Merge View shows editable Editor with merged result; Save writes via native dialog.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/App.tsx",
+          "version": "repo-file-v1:sha256:74760391515e31482ea852076b398a7eff7da9ef629fbe5c5f36c8aa100d3c6a"
+        }
+      ]
+    },
+    {
+      "id": "claim_e94fa132a4de477f8cae605aef3bc18f",
+      "statement": "No traditional conflict markers (<<<<<<<, =======, >>>>>>>) are inserted; merge is visual per-hunk with real-time preview; final output is clean merged text.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/merge.rs",
+          "version": "repo-file-v1:sha256:16316367744688ed7988eebe89f79ed16de06886110a09943f3360e472393de4"
+        },
+        {
+          "resource": "repo://src/utils/merge.ts",
+          "version": "repo-file-v1:sha256:09ddf674ed7cbd1ad50d8bdf6229620e2d85f49fb959e9d5b9814635afa771bd"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

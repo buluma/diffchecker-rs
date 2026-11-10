@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:41b9050eec540e9ebb106fb79c5d37c60f650fb5bbe485408225c13170df87c0",
+  "claims": [
+    {
+      "id": "claim_17ec14bc6a6e47658bad10003f680575",
+      "statement": "Frontend uses Vitest with jsdom; tests colocated as *.test.ts/*.test.tsx; setup in src/test/setup.ts with @testing-library/jest-dom; key suites: diff.test.ts (property-based 250 cases), merge.test.ts, limits.test.ts, component tests for App, DiffView, Editor, Toolbar, StatusBar.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/App.test.tsx",
+          "version": "repo-file-v1:sha256:2cf9a06f11da5dfd2d015538b613bba7436628ddf0b54806f289e2a0f9e9f428"
+        },
+        {
+          "resource": "repo://src/test/setup.ts",
+          "version": "repo-file-v1:sha256:54b7ef49beb40d34761d99e1e7052beec25ad62cc2bfd9858e24c716ba2f9072"
+        },
+        {
+          "resource": "repo://src/utils/diff.test.ts",
+          "version": "repo-file-v1:sha256:e89485023fb6536fa55939b662cec23d55c6a9791cca5a89ec1cf8a2098995e4"
+        },
+        {
+          "resource": "repo://vite.config.ts",
+          "version": "repo-file-v1:sha256:aff3bc16ba740e45bb4a6a0cd5f76a479ac934a45c9df060f921b2f710b243ad"
+        }
+      ]
+    },
+    {
+      "id": "claim_12c221f38ab44f249529066438bd957b",
+      "statement": "Backend uses cargo test with inline #[cfg(test)] modules in each source file; dev-dependency tempfile for isolated store tests; key suites: store (migration, deduplication, limits), diff (parity fixtures, Myers, fallback), merge, highlight, limits.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/Cargo.toml",
+          "version": "repo-file-v1:sha256:64cb0df4f058d06f5df1a42db928a12032306e6b6b68384ade31f277d2fade54"
+        },
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src-tauri/src/merge.rs",
+          "version": "repo-file-v1:sha256:16316367744688ed7988eebe89f79ed16de06886110a09943f3360e472393de4"
+        },
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe86bdf463fe42ceab8b9f362bb3e7d9",
+      "statement": "Diff parity validated by shared fixtures in src/utils/diff-parity-fixtures.json consumed by Rust test shared_browser_and_desktop_fixtures; TypeScript uses property-based testing (250 random sequences) verifying LCS optimality against reference implementation.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src/utils/diff-parity-fixtures.json",
+          "version": "repo-file-v1:sha256:abe2d4abc4f7a7ac94ff53742648768588561f7318bb7b5029a0151b1f35f3e8"
+        },
+        {
+          "resource": "repo://src/utils/diff.test.ts",
+          "version": "repo-file-v1:sha256:e89485023fb6536fa55939b662cec23d55c6a9791cca5a89ec1cf8a2098995e4"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb69f03ae2c24288a959bf8ae4960293",
+      "statement": "Tauri commands mocked in App.desktop.test.tsx via vi.mock('@tauri-apps/api/core') and window.desktopAPI injection; useLocalData tested through App integration.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/App.desktop.test.tsx",
+          "version": "repo-file-v1:sha256:f9a7aca565fc105302572e656dc1b4ae9389c8109c181e3d140ad88b1e03821b"
+        }
+      ]
+    },
+    {
+      "id": "claim_3c5b8cbe491146cb95e03ac381dbf7f6",
+      "statement": "CI runs bun run test, cargo test, bun run lint, bun run build on every PR; no automated Tauri integration/E2E tests (manual dev:desktop).",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:b9bf104a73a42545bf8de01125c4251f867261159bab35e00e8d37f179891c6b"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

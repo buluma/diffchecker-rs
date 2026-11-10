@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:76fd01db301a2f033cfbfb5ee108ebf1b3691a5172dd757fcbff1840c5925e5c",
+  "claims": [
+    {
+      "id": "claim_656eda326e6e4801992a272ab5f88dbb",
+      "statement": "The Rust backend consists of core modules in src-tauri/src/ including lib.rs (command registration and Tauri app setup), main.rs (entry point), types.rs (shared type definitions with TypeScript export via ts-rs), diff.rs (Myers diff algorithm), merge.rs (three-way merge), highlight.rs (syntect-based syntax highlighting), history.rs (history entry descriptions), limits.rs (input validation), store.rs (local JSON persistence with atomic writes), export.rs (diff formatting), language.rs (language detection), and markers.rs (diff change markers for minimap).",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/diff.rs",
+          "version": "repo-file-v1:sha256:79a13c2e21f606443c609a9474464eb7acc459cf4672a9e064af2f71aa7494bf"
+        },
+        {
+          "resource": "repo://src-tauri/src/export.rs",
+          "version": "repo-file-v1:sha256:0b1c620bf37653857ea5d479f0d4624d6293c6b3fa8466adb7620dccc7e005ae"
+        },
+        {
+          "resource": "repo://src-tauri/src/highlight.rs",
+          "version": "repo-file-v1:sha256:692679c83dbadf5cc931785ec5987333aaf5ab5341a2a4eead8aac91b4ed0907"
+        },
+        {
+          "resource": "repo://src-tauri/src/history.rs",
+          "version": "repo-file-v1:sha256:821d6c84f5f3b2709403f0298d6a66ad248bad983744af2d0b829f0f5b6d09cc"
+        },
+        {
+          "resource": "repo://src-tauri/src/language.rs",
+          "version": "repo-file-v1:sha256:14e7ee365d5fcb2f4daf26597abcd5e3ff9ab818fd5bf6eeec82164e5b588390"
+        },
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src-tauri/src/limits.rs",
+          "version": "repo-file-v1:sha256:a1a6d735f7b3999d29d333bf803f937b09218521711cf78cc41907295884de23"
+        },
+        {
+          "resource": "repo://src-tauri/src/main.rs",
+          "version": "repo-file-v1:sha256:d0c4890179e2bc921bb3e494df345df3591c147a748ad93453503ab810f00dc9"
+        },
+        {
+          "resource": "repo://src-tauri/src/markers.rs",
+          "version": "repo-file-v1:sha256:bd8855da51d57c3bf96cf6f3788a98f9f5363b207e349ce738e21645669cf3ef"
+        },
+        {
+          "resource": "repo://src-tauri/src/merge.rs",
+          "version": "repo-file-v1:sha256:16316367744688ed7988eebe89f79ed16de06886110a09943f3360e472393de4"
+        },
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        },
+        {
+          "resource": "repo://src-tauri/src/types.rs",
+          "version": "repo-file-v1:sha256:e9fa28013e19013e648cae67ab62e124f454aab5cb2bcb9787f774e08db02c99"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

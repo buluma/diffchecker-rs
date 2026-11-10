@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5e9525ac3da963e42a3a87616df894c67a7577af17b1561a2422314f9497844c",
+  "claims": [
+    {
+      "id": "claim_411e22747d2241b7a7b85060e861d78c",
+      "statement": "Rust (src-tauri/src/highlight.rs) uses syntect with base16-ocean.dark theme and 50+ language mappings; TypeScript (src/utils/highlight.ts) uses highlight.js with atom-one-dark theme and identical language IDs; both expose detectLanguage from path extension or content heuristics.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/highlight.rs",
+          "version": "repo-file-v1:sha256:692679c83dbadf5cc931785ec5987333aaf5ab5341a2a4eead8aac91b4ed0907"
+        },
+        {
+          "resource": "repo://src/utils/highlight.ts",
+          "version": "repo-file-v1:sha256:60a364ee2677786890f5b985c79189626d08d66a85efe08471f4da700ef017bd"
+        },
+        {
+          "resource": "repo://src/utils/language.ts",
+          "version": "repo-file-v1:sha256:c3376f1ef4d100d86e190d7452683e50a46f4fe2d594254458c33e085f448cd6"
+        }
+      ]
+    },
+    {
+      "id": "claim_e389f4c9871b4cd4a6ddce581f05dafe",
+      "statement": "Three Tauri commands: highlight_code_cmd (full file HTML with CSS classes), highlight_fragments_cmd (per-line HTML array for virtualized rendering), detect_language_cmd (path + content detection); web falls back to local highlight.js implementations.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb8f2a3b3c6940ac906bfb7b77e5443b",
+      "statement": "Editor and DiffView use useHighlightedLines hook which batches unique lines via highlight_fragments_cmd (desktop) or highlightCode (web), memoized by content+language key; only visible lines are highlighted (virtualized at 500+ lines).",
+      "evidence": [
+        {
+          "resource": "repo://src/components/DiffView.tsx",
+          "version": "repo-file-v1:sha256:26bbcd8a6f439be4b8125fa7ac23f43f7837059c48715a1cf8b8d04c5e7e5c0a"
+        },
+        {
+          "resource": "repo://src/components/Editor.tsx",
+          "version": "repo-file-v1:sha256:44ffc0aa686b0ab39b53cc92e502cfb47a1daaf682097fdef0547aaf142fb34a"
+        },
+        {
+          "resource": "repo://src/hooks/useHighlightedLines.ts",
+          "version": "repo-file-v1:sha256:02c0f892c978d50d92a1046a8f08e992d1013793d4455958a4ba15e362a8d0dc"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e2b9d05b6514c57a3509bbfb1b5b45c",
+      "statement": "Language detection checks file extension first (shared EXTENSION_MAP), then content heuristics (shebang, common patterns); returns 'plaintext' as default; mirrored in both Rust and TypeScript.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/language.rs",
+          "version": "repo-file-v1:sha256:14e7ee365d5fcb2f4daf26597abcd5e3ff9ab818fd5bf6eeec82164e5b588390"
+        },
+        {
+          "resource": "repo://src/utils/language.ts",
+          "version": "repo-file-v1:sha256:c3376f1ef4d100d86e190d7452683e50a46f4fe2d594254458c33e085f448cd6"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

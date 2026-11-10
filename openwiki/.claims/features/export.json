@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:125541adffa475d0ec27580b3a75c9124cfc75a54f9a417ee708c368cf0bc48f",
+  "claims": [
+    {
+      "id": "claim_46726d50e48b46b79daea7a886d2c66e",
+      "statement": "Both Rust (src-tauri/src/export.rs) and TypeScript (src/utils/export.ts) implement identical plain-text export for Unified and Side-by-Side diff formats, taking DiffLine[] and DiffViewMode as input.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/export.rs",
+          "version": "repo-file-v1:sha256:0b1c620bf37653857ea5d479f0d4624d6293c6b3fa8466adb7620dccc7e005ae"
+        },
+        {
+          "resource": "repo://src/utils/export.ts",
+          "version": "repo-file-v1:sha256:79da88d91c17d8df6498ad559df13e5e271e6a7b199c80f4908df2125e1fedad"
+        }
+      ]
+    },
+    {
+      "id": "claim_e601927b720544629ae99189378e1232",
+      "statement": "Unified format outputs classic diff -u style with +/-/space prefixes; Side-by-Side outputs two columns with 4-char padded line numbers and change markers (| + | -). Both include a header (DIFFCHECKER - UNIFIED DIFF / SIDE BY SIDE COMPARISON) and 80-char separator.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/export.rs",
+          "version": "repo-file-v1:sha256:0b1c620bf37653857ea5d479f0d4624d6293c6b3fa8466adb7620dccc7e005ae"
+        },
+        {
+          "resource": "repo://src/utils/export.ts",
+          "version": "repo-file-v1:sha256:79da88d91c17d8df6498ad559df13e5e271e6a7b199c80f4908df2125e1fedad"
+        }
+      ]
+    },
+    {
+      "id": "claim_da04e8a549e344778412068e4783e797",
+      "statement": "The Tauri command format_diff_cmd wraps the Rust export function; frontend App.tsx calls it via invoke() on desktop or uses local buildUnifiedOutput/buildSideBySideOutput on web, then saves via native dialog.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        },
+        {
+          "resource": "repo://src/components/App.tsx",
+          "version": "repo-file-v1:sha256:74760391515e31482ea852076b398a7eff7da9ef629fbe5c5f36c8aa100d3c6a"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:e61b5f403fa2d7360128e9e35c6ee0cd52bffa123c5cf4a67fd635e64bc521ac",
+  "claims": [
+    {
+      "id": "claim_c1a2864cdc9c42d18ed938e7be60f48e",
+      "statement": "Local data persists in ~/.config/diffchecker-desktop/ via atomic JSON writes (temp → rename with .bak backup) guarded by a global Mutex; stores recent files (max 10), history entries (max 20, 20 MiB total, 1 MiB per side), and save_history setting; reads Electron-era camelCase keys for migration.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        }
+      ]
+    },
+    {
+      "id": "claim_9797007fdeed4865aa7d8550b432e947",
+      "statement": "add_history_entry deduplicates by (original.path, original.content, changed.path, changed.content); returns status 'saved'/'disabled'/'too-large'; evicts oldest entries when total history exceeds 20 MiB.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/src/store.rs",
+          "version": "repo-file-v1:sha256:7a38f01801b4f489bdf83fb8f9e449694564b2617508f9cf9877c3d2041a52eb"
+        }
+      ]
+    },
+    {
+      "id": "claim_60fed7c14f1a46fbb2685b8781a28eca",
+      "statement": "Seven Tauri commands expose history/recent files: list_recent_files, open_recent_file, list_history, add_history, remove_history, clear_history, get/set_save_history; all capability-scoped in default.json.",
+      "evidence": [
+        {
+          "resource": "repo://src-tauri/capabilities/default.json",
+          "version": "repo-file-v1:sha256:a0b6a3a16b3af78f6f1e4c4cda550b91988958431d80ff3410624e6e435f2dd6"
+        },
+        {
+          "resource": "repo://src-tauri/src/lib.rs",
+          "version": "repo-file-v1:sha256:e7c6a9e788793071188eb764ce4f176f0aa324dcb43deb6f48849d546f479f26"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d27bf6deba846de9ce0e892a1c3c37d",
+      "statement": "Frontend useLocalData hook loads recent/history on mount, provides recordComparison/removeHistoryEntry/setSaveHistory/clearHistory actions that update local state optimistically; web fallback returns empty arrays/no-ops.",
+      "evidence": [
+        {
+          "resource": "repo://src/hooks/useLocalData.ts",
+          "version": "repo-file-v1:sha256:2129fcee4cac3961a51bfba3b32eea3a09572affe6ee477ab4b340a1237cc3ca"
+        },
+        {
+          "resource": "repo://src/platform/desktop.ts",
+          "version": "repo-file-v1:sha256:8f39bcc8330ab349311b4c1bca45507b35211b3150bc57619cb6b81e7e3451d6"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb6de565210546a6b906a57e3fbdb696",
+      "statement": "HistoryPanel (src/components/HistoryPanel.tsx) renders as a sidebar with save-history checkbox, entry list showing describe_recent_file/describe_history_side, and Restore/Remove/Clear actions; desktop-only via Toolbar toggle.",
+      "evidence": [
+        {
+          "resource": "repo://src/components/HistoryPanel.tsx",
+          "version": "repo-file-v1:sha256:1da1d5fae7b39c928e0a5ef4bc6e29fa3c87764dcb92ae67e7fbc77057ccb04c"
+        },
+        {
+          "resource": "repo://src/components/Toolbar.tsx",
+          "version": "repo-file-v1:sha256:3621b8ca3951c722c50b5f761d0a63f951a530e4fe7e7ca5da9cdda39c6643e1"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-10T04:51:48.310Z"
+  }
+}
