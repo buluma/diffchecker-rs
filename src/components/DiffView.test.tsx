@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { invoke, isTauri } from '@tauri-apps/api/core';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DiffView } from './DiffView';
 import { computeDiff } from '../utils/diff';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
+
+vi.mock('@tauri-apps/api/core', () => ({ isTauri: vi.fn(() => false), invoke: vi.fn() }));
 
 // Inline diff spans swap spaces for non-breaking spaces so they survive white-space collapsing
 const paneText = (container: HTMLElement, side: 'left' | 'right') =>
@@ -260,6 +263,28 @@ describe('DiffView change markers', () => {
 
       expect(container.querySelectorAll('.diff-marker')).toHaveLength(3);
     } finally {
+      restore();
+    }
+  });
+
+  it('keeps change navigation available when desktop marker calculation fails', async () => {
+    const restore = fakeLayout();
+    vi.mocked(isTauri).mockReturnValue(true);
+    let reject!: (error: Error) => void;
+    const pending = new Promise((_, fail) => { reject = fail; });
+    vi.mocked(invoke).mockReturnValueOnce(pending);
+    try {
+      const { container } = setup(text);
+      expect(invoke).toHaveBeenCalledWith('compute_markers_cmd', {
+        groups: expect.any(Array),
+        scrollHeight: 1000,
+      });
+
+      await act(async () => reject(new Error('Markers failed')));
+      expect(container.querySelector('.diff-ruler')).toBeNull();
+      expect(screen.getByRole('button', { name: /next change/i })).toBeEnabled();
+    } finally {
+      vi.mocked(isTauri).mockReturnValue(false);
       restore();
     }
   });

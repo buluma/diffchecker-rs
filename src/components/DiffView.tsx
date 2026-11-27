@@ -223,16 +223,16 @@ export function DiffView({
         }];
       });
       const current = ++request;
-      const fallback = () => toMarkers(positions.map(({ types, ...position }) => ({
-        ...position, kind: groupKind(types),
-      })), pane.scrollHeight);
       if (!isTauri()) {
-        setMarkers(fallback());
-      } else {
-        void invoke<ChangeMarker[]>('compute_markers_cmd', { groups: positions, scrollHeight: pane.scrollHeight })
-          .catch(fallback)
-          .then(result => { if (!disposed && current === request) setMarkers(result); });
+        setMarkers(toMarkers(positions.map(({ types, ...position }) => ({
+          ...position, kind: groupKind(types),
+        })), pane.scrollHeight));
+        return;
       }
+
+      void invoke<ChangeMarker[]>('compute_markers_cmd', { groups: positions, scrollHeight: pane.scrollHeight })
+        .catch(() => [])
+        .then(result => { if (!disposed && current === request) setMarkers(result); });
     };
 
     measure();
