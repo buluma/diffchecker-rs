@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import type { FileContent } from '../types/diff';
 import { useHighlightedLines } from '../hooks/useHighlightedLines';
-import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
+import { MAX_INPUT_BYTES, validateInputDesktop } from '../utils/limits';
 
 interface EditorProps {
   file: FileContent;
@@ -26,6 +26,7 @@ export function Editor({
   scrollTop,
   onScroll,
 }: EditorProps) {
+  const dropRequest = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const highlightedRef = useRef<HTMLPreElement>(null);
@@ -73,8 +74,11 @@ export function Editor({
     }
   }, [onScroll]);
 
+  useEffect(() => () => { dropRequest.current++; }, [file.content, file.path]);
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!readOnly) {
+      dropRequest.current++;
       onChange(e.target.value);
     }
   }, [onChange, readOnly]);
@@ -85,21 +89,27 @@ export function Editor({
     
     const file = e.dataTransfer.files[0];
     if (file) {
+      const request = ++dropRequest.current;
       if (file.size > MAX_INPUT_BYTES) {
         onError?.('Each input is limited to 5 MiB.');
         return;
       }
       const reader = new FileReader();
-      reader.onerror = () => onError?.(`Could not read ${file.name}.`);
+      reader.onerror = () => {
+        if (request === dropRequest.current) onError?.(`Could not read ${file.name}.`);
+      };
       reader.onload = (event) => {
+        if (request !== dropRequest.current) return;
         const content = event.target?.result;
         if (typeof content !== 'string') {
           onError?.(`Could not read ${file.name}.`);
           return;
         }
-        const error = getInputLimitError(content);
-        if (error) onError?.(error);
-        else onChange(content, file.name);
+        void validateInputDesktop(content).then(() => {
+          if (request === dropRequest.current) onChange(content, file.name);
+        }).catch((error: Error) => {
+          if (request === dropRequest.current) onError?.(error.message);
+        });
       };
       reader.readAsText(file);
     }

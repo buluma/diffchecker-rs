@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { DiffLine, DiffResult, DiffOptions, FileContent } from '../types/diff';
 import { detectLanguageFromPath, detectLanguageFromContent } from '../utils/language';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
-import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
+import { MAX_INPUT_BYTES, getInputLimitError, validateInputDesktop } from '../utils/limits';
 import { getDesktopAPI } from '../platform/desktop';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
@@ -41,6 +41,7 @@ export function useDiff() {
   // Whether a diff is already showing, so later recomputes (typing in the editors under the diff) can be debounced
   const hasResultRef = useRef(false);
   const requestIdRef = useRef(0);
+  const restoreRequestRef = useRef(0);
   const languageRequestRef = useRef({ original: 0, changed: 0 });
 
   // Compute diff while comparing, and recompute when content or options change
@@ -110,8 +111,6 @@ export function useDiff() {
   }, [isComparing, originalFile.content, changedFile.content, options]);
 
   const updateSide = useCallback((side: 'original' | 'changed', content: string, path: string | null) => {
-    const error = getInputLimitError(content);
-    if (error) { setInputError(error); return false; }
     setInputError(null);
     setComparisonWarning(null);
     const requestId = ++languageRequestRef.current[side];
@@ -125,13 +124,22 @@ export function useDiff() {
     return true;
   }, []);
 
+  const updateEditor = useCallback((side: 'original' | 'changed', content: string, currentPath: string | null, droppedPath?: string) => {
+    // Keep immediate feedback for typing. File drops have already been validated.
+    if (droppedPath === undefined) {
+      const error = getInputLimitError(content);
+      if (error) { setInputError(error); return; }
+    }
+    updateSide(side, content, droppedPath ?? currentPath);
+  }, [updateSide]);
+
   const updateOriginalContent = useCallback((content: string, path?: string) => {
-    updateSide('original', content, path ?? originalFile.path);
-  }, [updateSide, originalFile.path]);
+    updateEditor('original', content, originalFile.path, path);
+  }, [updateEditor, originalFile.path]);
 
   const updateChangedContent = useCallback((content: string, path?: string) => {
-    updateSide('changed', content, path ?? changedFile.path);
-  }, [updateSide, changedFile.path]);
+    updateEditor('changed', content, changedFile.path, path);
+  }, [updateEditor, changedFile.path]);
 
   const setOption = useCallback((updates: Partial<DiffOptions>) => {
     setOptions(prev => ({ ...prev, ...updates }));
@@ -169,11 +177,21 @@ export function useDiff() {
     original: { path: string | null; content: string },
     changed: { path: string | null; content: string },
   ) => {
-    setSideFile('original', original);
-    setSideFile('changed', changed);
-    setLanguageOverride(null);
-    setInputError(null);
-    setIsComparing(true);
+    const request = ++restoreRequestRef.current;
+    const { original: originalRevision, changed: changedRevision } = languageRequestRef.current;
+    const isCurrent = () => request === restoreRequestRef.current
+      && originalRevision === languageRequestRef.current.original
+      && changedRevision === languageRequestRef.current.changed;
+    try {
+      await Promise.all([validateInputDesktop(original.content), validateInputDesktop(changed.content)]);
+      if (!isCurrent()) return;
+      setSideFile('original', original);
+      setSideFile('changed', changed);
+      setLanguageOverride(null);
+      setIsComparing(true);
+    } catch (error) {
+      if (isCurrent()) setInputError(error instanceof Error ? error.message : String(error));
+    }
   }, [setSideFile]);
 
   const closeDiff = useCallback(() => {
@@ -217,8 +235,10 @@ export function useDiff() {
             setInputError('Each input is limited to 5 MiB.');
             return;
           }
-          void file.text().then(async content => {
-            setSideFile(side, { path: file.name, content });
+          void file.text().then(content => {
+            const error = getInputLimitError(content);
+            if (error) setInputError(error);
+            else setSideFile(side, { path: file.name, content });
           }).catch(() => setInputError(`Could not read ${file.name}.`));
         }
       };

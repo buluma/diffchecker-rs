@@ -12,7 +12,6 @@ pub const MAX_RECENT_FILES: usize = 10;
 pub const MAX_HISTORY_ENTRIES: usize = 20;
 pub const MAX_SIDE_BYTES: usize = 1024 * 1024;
 pub const MAX_HISTORY_BYTES: usize = 20 * 1024 * 1024;
-pub const MAX_OPEN_BYTES: usize = 5 * 1024 * 1024;
 const MAX_PATH_LENGTH: usize = 4096;
 static STORE_LOCK: Mutex<()> = Mutex::new(());
 

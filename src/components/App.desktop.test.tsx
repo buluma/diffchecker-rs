@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from './App';
 import type { HistoryEntry, RecentFile } from '../types/history';
@@ -108,6 +108,40 @@ describe('desktop history and recent files', () => {
     await user.paste('b');
 
     expect(api.addHistory).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Rust validation errors for dropped files without replacing the input', async () => {
+    const api = installApi({
+      validateInput: vi.fn().mockRejectedValue({ message: 'Each input is limited to 10000 lines.' }),
+    });
+    render(<App />);
+    const editor = originalEditor();
+    const file = new File(['optional content'], 'over-limit.txt', { type: 'text/plain' });
+    fireEvent.drop(editor, { dataTransfer: { files: [file] } });
+
+    expect(await screen.findByText('Each input is limited to 10000 lines.')).toBeInTheDocument();
+    expect(api.validateInput).toHaveBeenCalledWith('optional content');
+    expect(editor).toHaveValue('');
+  });
+
+  it('leaves both inputs in place when one restored side fails Rust validation', async () => {
+    installApi({
+      listHistory: vi.fn().mockResolvedValue([entry('h1', 'left side', 'right side')]),
+      validateInput: vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce({ message: 'Invalid saved input.' }),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(originalEditor());
+    await user.paste('current left');
+    await user.click(changedEditor());
+    await user.paste('current right');
+
+    await user.click(screen.getByRole('button', { name: /history/i }));
+    await user.click(await screen.findByRole('button', { name: /restore/i }));
+
+    expect(await screen.findByText('Invalid saved input.')).toBeInTheDocument();
+    expect(originalEditor()).toHaveValue('current left');
+    expect(changedEditor()).toHaveValue('current right');
   });
 
   it('lists saved comparisons, restores one and shows its diff', async () => {
