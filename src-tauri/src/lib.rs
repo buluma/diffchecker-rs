@@ -23,8 +23,7 @@ use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
     get_save_history as read_save_history, list_history as read_history_entries,
     list_recent_files as read_recent_files, remove_history_entry,
-    set_save_history as write_save_history, HistoryEntry, HistorySide,
-    RecentFile,
+    set_save_history as write_save_history, HistoryEntry, HistorySide, RecentFile,
 };
 use crate::types::{DiffLimitError, DiffLine, DiffOptions, DiffResult};
 
@@ -319,9 +318,7 @@ async fn compute_markers_cmd(
 
 #[tauri::command]
 fn validate_input_cmd(content: &str) -> Result<(), DiffLimitError> {
-    get_input_limit_error(content)
-        .map(Err)
-        .unwrap_or(Ok(()))
+    get_input_limit_error(content).map(Err).unwrap_or(Ok(()))
 }
 
 pub fn run() {
