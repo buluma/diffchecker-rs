@@ -6,6 +6,28 @@ use syntect::parsing::SyntaxSet;
 static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(SyntaxSet::load_defaults_newlines);
 static THEME_SET: Lazy<ThemeSet> = Lazy::new(ThemeSet::load_defaults);
 
+// Keep the language choices in their established menu order.
+pub const HIGHLIGHT_LANGUAGES: &[&str] = &[
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "csharp",
+    "go",
+    "rust",
+    "ruby",
+    "php",
+    "swift",
+    "kotlin",
+    "bash",
+    "sql",
+    "json",
+    "yaml",
+    "xml",
+    "html",
+    "css",
+];
+
 /// Maps our language identifiers to syntect syntax names
 fn map_language(language: &str) -> Option<&'static str> {
     match language.to_lowercase().as_str() {
@@ -253,6 +275,11 @@ pub fn highlight_fragments(lines: &[String], language: &str) -> Result<Vec<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn menu_languages_have_highlight_mappings() {
+        assert!(HIGHLIGHT_LANGUAGES.iter().all(|language| map_language(language).is_some()));
+    }
 
     #[test]
     fn fragments_escape_markup_and_preserve_empty_lines() {

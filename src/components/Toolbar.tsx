@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { DiffOptions } from '../types/diff';
 import type { RecentFile } from '../types/history';
 import { describeRecentFile } from '../utils/history';
@@ -59,6 +60,17 @@ export function Toolbar({
 }: ToolbarProps) {
   const [showIgnoreRules, setShowIgnoreRules] = useState(false);
   const [customIgnoreRules, setCustomIgnoreRules] = useState(options.customIgnoreRules.join('\n'));
+
+  const [languages, setLanguages] = useState(() => isTauri() ? [] : SUPPORTED_LANGUAGES);
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    let cancelled = false;
+    void invoke<string[]>('highlight_languages_cmd')
+      .then(languages => { if (!cancelled) setLanguages(languages); })
+      .catch(() => { if (!cancelled) setLanguages([]); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleIgnoreRulesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCustomIgnoreRules(e.target.value);
@@ -212,7 +224,7 @@ export function Toolbar({
           onChange={(e) => onLanguageChange(e.target.value || null)}
         >
           <option value="">Auto-detect</option>
-          {['plaintext', ...SUPPORTED_LANGUAGES].map(language => (
+          {['plaintext', ...languages].map(language => (
             <option key={language} value={language}>{language}</option>
           ))}
         </select>

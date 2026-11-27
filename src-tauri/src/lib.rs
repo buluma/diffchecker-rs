@@ -264,6 +264,11 @@ async fn highlight_fragments_cmd(
 }
 
 #[tauri::command]
+fn highlight_languages_cmd() -> &'static [&'static str] {
+    crate::highlight::HIGHLIGHT_LANGUAGES
+}
+
+#[tauri::command]
 async fn detect_language_cmd(path: Option<String>, content: String) -> Result<String, String> {
     let lang = if let Some(path) = path {
         detect_language_from_path(Some(&path))
@@ -341,6 +346,7 @@ pub fn run() {
             format_diff_cmd,
             highlight_code_cmd,
             highlight_fragments_cmd,
+            highlight_languages_cmd,
             detect_language_cmd,
             build_merged_content_cmd,
             compute_markers_cmd,
