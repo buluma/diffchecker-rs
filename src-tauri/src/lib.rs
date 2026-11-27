@@ -18,7 +18,7 @@ use crate::history::{describe_recent_file, describe_side};
 use crate::language::{detect_language_from_content, detect_language_from_path};
 use crate::limits::{get_input_limit_error, MAX_INPUT_BYTES};
 use crate::markers::{compute_markers, ChangeMarker, MeasuredGroup};
-use crate::merge::{build_merged_content, MergeChoice, RemovedLines};
+use crate::merge::{build_merged_content, MergeChoice};
 use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
     get_save_history as read_save_history, list_history as read_history_entries,
@@ -306,7 +306,7 @@ async fn build_merged_content_cmd(
     lines: Vec<DiffLine>,
     choices: HashMap<usize, MergeChoice>,
 ) -> Result<String, String> {
-    Ok(build_merged_content(&lines, &choices, RemovedLines::KeepByDefault))
+    Ok(build_merged_content(&lines, &choices))
 }
 
 #[tauri::command]

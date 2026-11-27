@@ -7,7 +7,7 @@ use crate::highlight::{highlight_fragments, HIGHLIGHT_LANGUAGES};
 use crate::language::{detect_language_from_content, detect_language_from_path};
 use crate::limits::get_input_limit_error;
 use crate::markers::{compute_markers, MeasuredGroup};
-use crate::merge::{build_merged_content, MergeChoice, RemovedLines};
+use crate::merge::{build_merged_content, MergeChoice};
 use crate::types::{DiffLine, DiffOptions, DiffResult, DiffViewMode};
 
 #[derive(Deserialize)]
@@ -54,11 +54,9 @@ pub fn dispatch(request: JsValue) -> Result<JsValue, JsError> {
         }
         Operation::Languages => encode(HIGHLIGHT_LANGUAGES),
         Operation::Markers(groups, height) => encode(compute_markers(groups, height)),
-        Operation::Merge(lines, choices) => encode(build_merged_content(
-            &lines,
-            &choices.into_iter().collect(),
-            RemovedLines::DropByDefault,
-        )),
+        Operation::Merge(lines, choices) => {
+            encode(build_merged_content(&lines, &choices.into_iter().collect()))
+        }
         Operation::Export(lines, mode) => encode(format_diff(&lines, &mode)),
         Operation::Validate((content,)) => match get_input_limit_error(&content) {
             Some(error) => Err(error.into()),

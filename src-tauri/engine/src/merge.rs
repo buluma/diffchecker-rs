@@ -8,17 +8,9 @@ pub enum MergeChoice {
     Right,
 }
 
-pub enum RemovedLines {
-    KeepByDefault,
-    DropByDefault,
-}
-
 /// Builds merged output from the complete diff, preserving unchanged lines.
-pub fn build_merged_content(
-    lines: &[DiffLine],
-    choices: &HashMap<usize, MergeChoice>,
-    removed_lines: RemovedLines,
-) -> String {
+/// Without choices the output is the changed text; choices bring back original lines.
+pub fn build_merged_content(lines: &[DiffLine], choices: &HashMap<usize, MergeChoice>) -> String {
     let mut result = Vec::new();
 
     for (index, line) in lines.iter().enumerate() {
@@ -34,12 +26,7 @@ pub fn build_merged_content(
                 }
             }
             DiffType::Removed => {
-                // Desktop and browser historically started from different merge defaults.
-                let include = match removed_lines {
-                    RemovedLines::KeepByDefault => choice != Some(MergeChoice::Right),
-                    RemovedLines::DropByDefault => choice == Some(MergeChoice::Right),
-                };
-                if include {
+                if choice == Some(MergeChoice::Right) {
                     result.push(
                         line.original_content
                             .clone()
@@ -91,7 +78,7 @@ mod tests {
             make_line(DiffType::Equal, "line1", None, 0),
             make_line(DiffType::Equal, "line2", None, 1),
         ];
-        let result = build_merged_content(&lines, &HashMap::new(), RemovedLines::KeepByDefault);
+        let result = build_merged_content(&lines, &HashMap::new());
         assert_eq!(result, "line1\nline2");
     }
 
@@ -106,14 +93,26 @@ mod tests {
         // Choose left (original) - added line should be omitted
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Left);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
+        let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nline2");
 
         // Choose right (changed) - added line should be included
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
+        let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nnew_line\nline2");
+    }
+
+    #[test]
+    fn test_build_merged_content_starts_from_changed_text() {
+        let lines = vec![
+            make_line(DiffType::Equal, "line1", None, 0),
+            make_line(DiffType::Removed, "old_line", Some("old_line"), 1),
+            make_line(DiffType::Added, "new_line", None, 2),
+            make_line(DiffType::Modified, "new_content", Some("old_content"), 3),
+        ];
+        let result = build_merged_content(&lines, &HashMap::new());
+        assert_eq!(result, "line1\nnew_line\nnew_content");
     }
 
     #[test]
@@ -124,17 +123,15 @@ mod tests {
             make_line(DiffType::Equal, "line2", None, 2),
         ];
 
-        // Choose left (original) - removed line should be included
-        let mut choices = HashMap::new();
-        choices.insert(1, MergeChoice::Left);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
-        assert_eq!(result, "line1\nold_line\nline2");
+        // Unchosen - removed line stays out, as in the changed text
+        let result = build_merged_content(&lines, &HashMap::new());
+        assert_eq!(result, "line1\nline2");
 
-        // Choose right (changed) - removed line should be omitted
+        // The merge button on a removed line restores it
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
-        assert_eq!(result, "line1\nline2");
+        let result = build_merged_content(&lines, &choices);
+        assert_eq!(result, "line1\nold_line\nline2");
     }
 
     #[test]
@@ -148,13 +145,13 @@ mod tests {
         // Choose left (original)
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Left);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
+        let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nold_content\nline2");
 
         // Choose right (changed)
         let mut choices = HashMap::new();
         choices.insert(1, MergeChoice::Right);
-        let result = build_merged_content(&lines, &choices, RemovedLines::KeepByDefault);
+        let result = build_merged_content(&lines, &choices);
         assert_eq!(result, "line1\nnew_content\nline2");
     }
 }

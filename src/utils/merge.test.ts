@@ -15,7 +15,7 @@ describe('buildMergedContent', () => {
     expect(runWasm('merge', result.lines, [])).toBe('one\ntwo\nthree\nfour\nFIVE\nsix\nseven\neight\nnine\nten');
   });
 
-  it('restores a removed line only after the browser merge choice', () => {
+  it('restores a removed line only after its merge choice', () => {
     const { result } = runWasm('compare', 'keep\nremoved', 'keep', DEFAULT_DIFF_OPTIONS);
     const index = result.lines.findIndex(line => line.type === 'removed');
     expect(runWasm('merge', result.lines, [])).toBe('keep');
