@@ -65,8 +65,8 @@ export function DiffView({
   const originalHighlights = useHighlightedLines(visibleLines.map(line => line.originalContent ?? line.content), originalLanguage);
   const changedHighlights = useHighlightedLines(visibleLines.map(line => line.content), changedLanguage);
   const highlighted = (content: string, language: string) => language === originalLanguage
-    ? originalHighlights.get(content) ?? (language === changedLanguage ? changedHighlights.get(content) : undefined) ?? ' '
-    : changedHighlights.get(content) ?? ' ';
+    ? originalHighlights.get(content) ?? (language === changedLanguage ? changedHighlights.get(content) : undefined)
+    : changedHighlights.get(content);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>, side: 'split' | 'unified') => {
     if (virtual) setViewport({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight || 600 });
@@ -268,12 +268,13 @@ export function DiffView({
     }
 
     // Simple syntax highlighting
-    return <span dangerouslySetInnerHTML={{ __html: highlighted(content, language) }} />;
+    return renderHighlightedCode(content, language);
   };
 
-  const renderHighlightedCode = (content: string, language: string) => (
-    <span dangerouslySetInnerHTML={{ __html: highlighted(content, language) }} />
-  );
+  const renderHighlightedCode = (content: string, language: string) => {
+    const html = highlighted(content, language);
+    return html === undefined ? <span>{content || ' '}</span> : <span dangerouslySetInnerHTML={{ __html: html }} />;
+  };
 
   // Both sides of a line share one row inside a single scroll container, so a line that wraps to
   // more rows on one side stretches the other side too instead of pushing the panes out of step
