@@ -36,7 +36,7 @@ fn map_language(language: &str) -> Option<&'static str> {
         "javascript" | "js" => Some("JavaScript"),
         "typescript" | "ts" => Some("TypeScript"),
         "jsx" => Some("JavaScript (Babel)"),
-        "tsx" => Some("TypeScript (Babel)"),
+        "tsx" => Some("TypeScriptReact"),
         "python" | "py" => Some("Python"),
         "rust" | "rs" => Some("Rust"),
         "go" | "golang" => Some("Go"),
@@ -61,9 +61,9 @@ fn map_language(language: &str) -> Option<&'static str> {
         "sh" | "bash" | "shell" => Some("Bourne Again Shell (bash)"),
         "markdown" | "md" => Some("Markdown"),
         "dockerfile" | "docker" => Some("Dockerfile"),
-        "nginx" => Some("Nginx"),
+        "nginx" => Some("nginx"),
         "graphql" | "gql" => Some("GraphQL"),
-        "protobuf" | "proto" => Some("Protobuf"),
+        "protobuf" | "proto" => Some("Protocol Buffer"),
         "lua" => Some("Lua"),
         "perl" => Some("Perl"),
         "r" => Some("R"),
@@ -285,6 +285,66 @@ mod tests {
                 map_language(language)
                     .and_then(|name| SYNTAX_SET.find_syntax_by_name(name))
                     .is_none()
+            })
+            .collect();
+        assert!(missing.is_empty(), "no syntax for {missing:?}");
+    }
+
+    #[test]
+    fn mapped_languages_have_highlight_syntaxes() {
+        // One identifier per mapping: a misspelled syntax name silently falls back to plain text.
+        let mapped = [
+            "plaintext",
+            "javascript",
+            "typescript",
+            "jsx",
+            "tsx",
+            "python",
+            "rust",
+            "go",
+            "java",
+            "cpp",
+            "c",
+            "csharp",
+            "php",
+            "ruby",
+            "swift",
+            "kotlin",
+            "scala",
+            "html",
+            "css",
+            "scss",
+            "less",
+            "json",
+            "xml",
+            "yaml",
+            "toml",
+            "sql",
+            "bash",
+            "markdown",
+            "dockerfile",
+            "nginx",
+            "graphql",
+            "protobuf",
+            "lua",
+            "perl",
+            "r",
+            "julia",
+            "elm",
+            "haskell",
+            "clojure",
+            "erlang",
+            "elixir",
+            "dart",
+            "vue",
+            "svelte",
+        ];
+        let missing: Vec<_> = mapped
+            .iter()
+            .filter_map(|language| {
+                map_language(language)
+                    .filter(|name| SYNTAX_SET.find_syntax_by_name(name).is_none())
+                    .map(|name| (*language, name))
             })
             .collect();
         assert!(missing.is_empty(), "no syntax for {missing:?}");
