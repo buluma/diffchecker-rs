@@ -1,5 +1,4 @@
 import type { HistoryEntry } from '../types/history';
-import { describeSide } from '../utils/history';
 
 interface HistoryPanelProps {
   entries: HistoryEntry[];
@@ -43,10 +42,10 @@ export function HistoryPanel({ entries, saveHistory, onToggleSave, onRestore, on
               <div className="history-item-text">
                 <span className="history-item-time">{new Date(entry.createdAt).toLocaleString()}</span>
                 <span className="history-item-side">
-                  <span className="history-item-mark history-item-mark-original">−</span>{describeSide(entry.original)}
+                  <span className="history-item-mark history-item-mark-original">−</span>{entry.originalLabel}
                 </span>
                 <span className="history-item-side">
-                  <span className="history-item-mark history-item-mark-changed">+</span>{describeSide(entry.changed)}
+                  <span className="history-item-mark history-item-mark-changed">+</span>{entry.changedLabel}
                 </span>
               </div>
               <div className="history-item-actions">

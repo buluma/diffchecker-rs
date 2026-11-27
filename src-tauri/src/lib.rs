@@ -28,7 +28,7 @@ use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
     get_save_history as read_save_history, list_history as read_history_entries,
     list_recent_files as read_recent_files, remove_history_entry,
-    set_save_history as write_save_history, HistoryAddResult, HistoryEntry, HistorySide,
+    set_save_history as write_save_history, HistoryEntry, HistorySide,
     RecentFile, MAX_OPEN_BYTES,
 };
 use crate::types::{DiffLine, DiffOptions, DiffResult, DiffType};
@@ -159,9 +159,22 @@ fn get_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
+#[derive(Serialize)]
+struct RecentFileView {
+    #[serde(flatten)]
+    file: RecentFile,
+    label: String,
+}
+
 #[tauri::command]
-fn list_recent_files(app: AppHandle) -> Result<Vec<RecentFile>, String> {
-    read_recent_files(&app_data_dir(&app)?)
+fn list_recent_files(app: AppHandle) -> Result<Vec<RecentFileView>, String> {
+    Ok(read_recent_files(&app_data_dir(&app)?)?
+        .into_iter()
+        .map(|file| RecentFileView {
+            label: describe_recent_file(&file.path),
+            file,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -181,9 +194,35 @@ fn open_recent_file(app: AppHandle, path: String) -> Result<Option<OpenedFile>, 
     }
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HistoryEntryView {
+    #[serde(flatten)]
+    entry: HistoryEntry,
+    original_label: String,
+    changed_label: String,
+}
+
+fn history_views(entries: Vec<HistoryEntry>) -> Vec<HistoryEntryView> {
+    entries
+        .into_iter()
+        .map(|entry| HistoryEntryView {
+            original_label: describe_side(&entry.original),
+            changed_label: describe_side(&entry.changed),
+            entry,
+        })
+        .collect()
+}
+
+#[derive(Serialize)]
+struct HistoryAddView {
+    entries: Vec<HistoryEntryView>,
+    status: &'static str,
+}
+
 #[tauri::command]
-fn list_history(app: AppHandle) -> Result<Vec<HistoryEntry>, String> {
-    read_history_entries(&app_data_dir(&app)?)
+fn list_history(app: AppHandle) -> Result<Vec<HistoryEntryView>, String> {
+    read_history_entries(&app_data_dir(&app)?).map(history_views)
 }
 
 #[tauri::command]
@@ -191,18 +230,22 @@ async fn add_history(
     app: AppHandle,
     original: HistorySide,
     changed: HistorySide,
-) -> Result<HistoryAddResult, String> {
-    add_history_entry(&app_data_dir(&app)?, original, changed)
+) -> Result<HistoryAddView, String> {
+    let result = add_history_entry(&app_data_dir(&app)?, original, changed)?;
+    Ok(HistoryAddView {
+        entries: history_views(result.entries),
+        status: result.status,
+    })
 }
 
 #[tauri::command]
-fn remove_history(app: AppHandle, id: String) -> Result<Vec<HistoryEntry>, String> {
-    remove_history_entry(&app_data_dir(&app)?, &id)
+fn remove_history(app: AppHandle, id: String) -> Result<Vec<HistoryEntryView>, String> {
+    remove_history_entry(&app_data_dir(&app)?, &id).map(history_views)
 }
 
 #[tauri::command]
-fn clear_history(app: AppHandle) -> Result<Vec<HistoryEntry>, String> {
-    clear_stored_history(&app_data_dir(&app)?)
+fn clear_history(app: AppHandle) -> Result<Vec<HistoryEntryView>, String> {
+    clear_stored_history(&app_data_dir(&app)?).map(history_views)
 }
 
 #[tauri::command]

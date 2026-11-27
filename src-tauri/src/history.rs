@@ -1,45 +1,41 @@
 use crate::store::HistorySide;
-use std::path::Path;
 
 const MAX_PREVIEW_LENGTH: usize = 40;
 
 pub fn file_name(file_path: &str) -> &str {
-    Path::new(file_path)
-        .file_name()
-        .and_then(|n| n.to_str())
+    file_path
+        .rsplit(['/', '\\'])
+        .next()
+        .filter(|name| !name.is_empty())
         .unwrap_or(file_path)
 }
 
 pub fn describe_recent_file(file_path: &str) -> String {
-    let parts: Vec<&str> = Path::new(file_path)
-        .components()
-        .filter_map(|c| c.as_os_str().to_str())
-        .collect();
-    let name = parts.last().copied().unwrap_or(file_path);
-    let folder = parts.get(parts.len().saturating_sub(2)).copied();
-    if let Some(folder) = folder {
-        format!("{name} — {folder}")
-    } else {
-        name.to_string()
+    let mut parts = file_path
+        .rsplit(['/', '\\'])
+        .filter(|part| !part.is_empty());
+    let name = parts.next().unwrap_or(file_path);
+    match parts.next() {
+        Some(folder) => format!("{name} — {folder}"),
+        None => name.to_owned(),
     }
 }
 
 pub fn describe_side(side: &HistorySide) -> String {
-    if let Some(path) = &side.path {
+    if let Some(path) = side.path.as_deref().filter(|path| !path.is_empty()) {
         return file_name(path).to_string();
     }
 
-    let first_line = side
-        .content
-        .lines()
-        .map(str::trim)
-        .find(|s| !s.is_empty());
+    let first_line = side.content.lines().map(str::trim).find(|s| !s.is_empty());
     if let Some(line) = first_line {
-        if line.len() > MAX_PREVIEW_LENGTH {
-            format!("{}…", &line[..MAX_PREVIEW_LENGTH])
-        } else {
-            line.to_string()
+        let mut units = 0;
+        for (index, character) in line.char_indices() {
+            units += character.len_utf16();
+            if units > MAX_PREVIEW_LENGTH {
+                return format!("{}…", &line[..index]);
+            }
         }
+        line.to_owned()
     } else {
         "(empty)".to_string()
     }
@@ -54,13 +50,19 @@ mod tests {
         assert_eq!(file_name("src/main.rs"), "main.rs");
         assert_eq!(file_name("/path/to/file.txt"), "file.txt");
         assert_eq!(file_name("file"), "file");
+        assert_eq!(file_name(r"C:\work\src\a.rs"), "a.rs");
     }
 
     #[test]
     fn test_describe_recent_file() {
         assert_eq!(describe_recent_file("src/main.rs"), "main.rs — src");
         assert_eq!(describe_recent_file("src/lib.rs"), "lib.rs — src");
-        assert_eq!(describe_recent_file("/home/user/project/src/main.rs"), "main.rs — src");
+        assert_eq!(describe_recent_file("a.rs"), "a.rs");
+        assert_eq!(describe_recent_file(r"C:\work\src\a.rs"), "a.rs — src");
+        assert_eq!(
+            describe_recent_file("/home/user/project/src/main.rs"),
+            "main.rs — src"
+        );
     }
 
     #[test]
@@ -93,6 +95,16 @@ mod tests {
                 content: long,
             }),
             format!("{}…", "a".repeat(40))
+        );
+    }
+    #[test]
+    fn previews_skip_blank_lines_and_truncate_at_unicode_boundaries() {
+        assert_eq!(
+            describe_side(&HistorySide {
+                path: None,
+                content: format!("\n  \n{}🙂tail\nsecond", "a".repeat(39)),
+            }),
+            format!("{}…", "a".repeat(39))
         );
     }
 }
