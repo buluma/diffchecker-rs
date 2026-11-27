@@ -25,8 +25,6 @@
     "allow-detect-language-cmd",
     "allow-build-merged-content-cmd",
     "allow-compute-markers-cmd",
-    "allow-describe-recent-file-cmd",
-    "allow-describe-history-side-cmd",
     "allow-validate-input-cmd"
   ]
 }
