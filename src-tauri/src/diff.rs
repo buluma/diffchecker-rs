@@ -1,11 +1,10 @@
+use crate::limits::get_input_limit_error;
 use crate::types::{
     CharDiff, CharDiffType, DiffLimitError, DiffLine, DiffOptions, DiffPrecision, DiffResult,
     DiffStats, DiffType,
 };
 use std::collections::HashMap;
 
-const MAX_INPUT_LINES: usize = 10_000;
-const MAX_INPUT_BYTES: usize = 5 * 1024 * 1024;
 const _MAX_SIDE_BYTES: usize = 1024 * 1024;
 const MIN_LINE_SIMILARITY: f64 = 0.5;
 const MAX_GAP_COMPARISONS: usize = 100_000;
@@ -497,8 +496,10 @@ pub fn compute_diff(
     changed_text: &str,
     options: &DiffOptions,
 ) -> Result<DiffResult, DiffLimitError> {
-    if original_text.len() > MAX_INPUT_BYTES || changed_text.len() > MAX_INPUT_BYTES {
-        return Err(DiffLimitError::new("Each input is limited to 5 MiB."));
+    if let Some(error) =
+        get_input_limit_error(original_text).or_else(|| get_input_limit_error(changed_text))
+    {
+        return Err(error);
     }
 
     // Handle empty inputs early
@@ -517,13 +518,6 @@ pub fn compute_diff(
 
     let original_lines: Vec<String> = original_text.split('\n').map(|s| s.to_string()).collect();
     let changed_lines: Vec<String> = changed_text.split('\n').map(|s| s.to_string()).collect();
-
-    if original_lines.len() > MAX_INPUT_LINES || changed_lines.len() > MAX_INPUT_LINES {
-        return Err(DiffLimitError::new(&format!(
-            "Each input is limited to {} lines.",
-            MAX_INPUT_LINES
-        )));
-    }
 
     let orig_normalized: Vec<String> = original_lines
         .iter()
@@ -769,6 +763,7 @@ pub fn compute_diff(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::limits::{MAX_INPUT_BYTES, MAX_INPUT_LINES};
     use crate::types::DiffOptions;
 
     fn default_options() -> DiffOptions {

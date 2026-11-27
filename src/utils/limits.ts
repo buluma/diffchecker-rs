@@ -21,8 +21,14 @@ export function getInputLimitError(content: string): string | null {
 export async function validateInputDesktop(content: string): Promise<void> {
   const api = getDesktopAPI();
   if (api) {
-    await api.validateInput(content);
-    return;
+    try {
+      return await api.validateInput(content);
+    } catch (error) {
+      const message = typeof error === 'object' && error !== null && 'message' in error
+        ? String(error.message)
+        : String(error);
+      throw new Error(message);
+    }
   }
   const error = getInputLimitError(content);
   if (error) throw new Error(error);

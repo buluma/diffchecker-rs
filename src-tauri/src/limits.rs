@@ -1,40 +1,16 @@
-use serde::{Deserialize, Serialize};
+use crate::types::DiffLimitError;
 
 pub const MAX_INPUT_BYTES: usize = 5 * 1024 * 1024;
 pub const MAX_INPUT_LINES: usize = 10_000;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DiffLimitError {
-    pub message: String,
-}
-
-impl DiffLimitError {
-    pub fn new(message: impl Into<String>) -> Self {
-        Self {
-            message: message.into(),
-        }
-    }
-}
-
-impl std::fmt::Display for DiffLimitError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for DiffLimitError {}
-
 pub fn get_input_limit_error(content: &str) -> Option<DiffLimitError> {
-    if content.as_bytes().len() > MAX_INPUT_BYTES {
-        return Some(DiffLimitError::new(
-            "Each input is limited to 5 MiB.".to_string(),
-        ));
+    if content.len() > MAX_INPUT_BYTES {
+        return Some(DiffLimitError::new("Each input is limited to 5 MiB."));
     }
 
     let mut lines = 1usize;
-    for ch in content.chars() {
-        if ch == '\n' {
+    for byte in content.bytes() {
+        if byte == b'\n' {
             lines += 1;
             if lines > MAX_INPUT_LINES {
                 return Some(DiffLimitError::new(format!(

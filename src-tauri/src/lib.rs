@@ -21,7 +21,7 @@ use crate::diff::compute_diff;
 use crate::highlight::highlight_code;
 use crate::history::{describe_recent_file, describe_side};
 use crate::language::{detect_language_from_content, detect_language_from_path};
-use crate::limits::{get_input_limit_error, DiffLimitError};
+use crate::limits::{get_input_limit_error, MAX_INPUT_BYTES};
 use crate::markers::{group_kind, to_markers, ChangeMarker, GroupPosition};
 use crate::merge::{build_merged_content, MergeChoice};
 use crate::store::{
@@ -29,9 +29,9 @@ use crate::store::{
     get_save_history as read_save_history, list_history as read_history_entries,
     list_recent_files as read_recent_files, remove_history_entry,
     set_save_history as write_save_history, HistoryEntry, HistorySide,
-    RecentFile, MAX_OPEN_BYTES,
+    RecentFile,
 };
-use crate::types::{DiffLine, DiffOptions, DiffResult, DiffType};
+use crate::types::{DiffLimitError, DiffLine, DiffOptions, DiffResult, DiffType};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -77,7 +77,7 @@ fn open_path(app: &AppHandle, path: PathBuf) -> Result<OpenedFile, OpenPathError
     if !metadata.is_file() {
         return Err(OpenPathError::Other("Select a regular file.".to_owned()));
     }
-    if metadata.len() > MAX_OPEN_BYTES as u64 {
+    if metadata.len() > MAX_INPUT_BYTES as u64 {
         return Err(OpenPathError::Other(
             "Each input is limited to 5 MiB.".to_owned(),
         ));
@@ -88,6 +88,7 @@ fn open_path(app: &AppHandle, path: PathBuf) -> Result<OpenedFile, OpenPathError
             path.file_name().unwrap_or_default().to_string_lossy()
         ))
     })?;
+    validate_input_cmd(&content).map_err(|error| OpenPathError::Other(error.to_string()))?;
     let path_string = path.to_string_lossy().into_owned();
     let directory = app_data_dir(app).map_err(OpenPathError::Other)?;
     add_recent_file(&directory, &path_string).map_err(OpenPathError::Other)?;
@@ -363,8 +364,8 @@ fn describe_history_side_cmd(side: HistorySide) -> String {
 }
 
 #[tauri::command]
-fn validate_input_cmd(content: String) -> Result<(), DiffLimitError> {
-    get_input_limit_error(&content)
+fn validate_input_cmd(content: &str) -> Result<(), DiffLimitError> {
+    get_input_limit_error(content)
         .map(Err)
         .unwrap_or(Ok(()))
 }
