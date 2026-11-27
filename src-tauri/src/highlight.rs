@@ -3,8 +3,31 @@ use syntect::easy::HighlightLines;
 use syntect::highlighting::{Style, ThemeSet};
 use syntect::parsing::SyntaxSet;
 
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(SyntaxSet::load_defaults_newlines);
+// two-face adds syntaxes the syntect defaults lack, such as TypeScript, Swift and Kotlin.
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(two_face::syntax::extra_newlines);
 static THEME_SET: Lazy<ThemeSet> = Lazy::new(ThemeSet::load_defaults);
+
+// Keep the language choices in their established menu order.
+pub const HIGHLIGHT_LANGUAGES: &[&str] = &[
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "csharp",
+    "go",
+    "rust",
+    "ruby",
+    "php",
+    "swift",
+    "kotlin",
+    "bash",
+    "sql",
+    "json",
+    "yaml",
+    "xml",
+    "html",
+    "css",
+];
 
 /// Maps our language identifiers to syntect syntax names
 fn map_language(language: &str) -> Option<&'static str> {
@@ -35,7 +58,7 @@ fn map_language(language: &str) -> Option<&'static str> {
         "yaml" | "yml" => Some("YAML"),
         "toml" => Some("TOML"),
         "sql" => Some("SQL"),
-        "sh" | "bash" | "shell" => Some("Bash"),
+        "sh" | "bash" | "shell" => Some("Bourne Again Shell (bash)"),
         "markdown" | "md" => Some("Markdown"),
         "dockerfile" | "docker" => Some("Dockerfile"),
         "nginx" => Some("Nginx"),
@@ -253,6 +276,19 @@ pub fn highlight_fragments(lines: &[String], language: &str) -> Result<Vec<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn menu_languages_have_highlight_syntaxes() {
+        let missing: Vec<_> = HIGHLIGHT_LANGUAGES
+            .iter()
+            .filter(|language| {
+                map_language(language)
+                    .and_then(|name| SYNTAX_SET.find_syntax_by_name(name))
+                    .is_none()
+            })
+            .collect();
+        assert!(missing.is_empty(), "no syntax for {missing:?}");
+    }
 
     #[test]
     fn fragments_escape_markup_and_preserve_empty_lines() {

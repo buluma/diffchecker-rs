@@ -117,7 +117,7 @@ export function useDiff() {
     const requestId = ++languageRequestRef.current[side];
     const setFile = side === 'original' ? setOriginalFile : setChangedFile;
     setFile(prev => ({ ...prev, content, path }));
-    void detectLanguage(path, content).catch(() => path ? detectLanguageFromPath(path) : detectLanguageFromContent(content)).then(language => {
+    void detectLanguage(path, content).catch(() => 'plaintext').then(language => {
       if (requestId === languageRequestRef.current[side]) {
         setFile(prev => ({ ...prev, language }));
       }

@@ -21,6 +21,7 @@
     "allow-format-diff-cmd",
     "allow-highlight-code-cmd",
     "allow-highlight-fragments-cmd",
+    "allow-highlight-languages-cmd",
     "allow-detect-language-cmd",
     "allow-build-merged-content-cmd",
     "allow-compute-markers-cmd",
