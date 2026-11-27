@@ -7,11 +7,13 @@ import type { HistoryEntry, RecentFile } from '../types/history';
 const originalEditor = () => screen.getByPlaceholderText(/^Original text/);
 const changedEditor = () => screen.getByPlaceholderText(/^Changed text/);
 
-const entry = (id: string, original: string, changed: string, path: string | null = null): HistoryEntry => ({
+const entry = (id: string, original: string, changed: string, path: string | null = null, originalLabel = original): HistoryEntry => ({
   id,
   createdAt: Date.UTC(2026, 8, 20, 12, 0, 0),
   original: { path, content: original },
   changed: { path: null, content: changed },
+  originalLabel,
+  changedLabel: changed,
 });
 
 type Api = NonNullable<Window['desktopAPI']>;
@@ -31,8 +33,6 @@ function installApi(overrides: Partial<Api> = {}) {
     setSaveHistory: vi.fn().mockImplementation(async (enabled: boolean) => enabled),
     detectLanguage: vi.fn().mockResolvedValue('plaintext'),
     buildMergedContent: vi.fn().mockResolvedValue(''),
-    describeRecentFile: vi.fn().mockResolvedValue(''),
-    describeHistorySide: vi.fn().mockResolvedValue(''),
     validateInput: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   } satisfies Api;
@@ -111,7 +111,7 @@ describe('desktop history and recent files', () => {
   });
 
   it('lists saved comparisons, restores one and shows its diff', async () => {
-    installApi({ listHistory: vi.fn().mockResolvedValue([entry('h1', 'left side', 'right side', '/x/a.txt')]) });
+    installApi({ listHistory: vi.fn().mockResolvedValue([entry('h1', 'left side', 'right side', '/x/a.txt', 'a.txt')]) });
     const user = userEvent.setup();
     render(<App />);
 
@@ -151,8 +151,8 @@ describe('desktop history and recent files', () => {
   it('reopens a recent file into the side it was picked for', async () => {
     const api = installApi({
       listRecentFiles: vi.fn().mockResolvedValue([
-        { path: '/work/src/a.ts', openedAt: 2 },
-        { path: '/work/src/b.ts', openedAt: 1 },
+        { path: '/work/src/a.ts', openedAt: 2, label: 'a.ts — src' },
+        { path: '/work/src/b.ts', openedAt: 1, label: 'b.ts — src' },
       ]),
       openRecentFile: vi.fn().mockResolvedValue({ path: '/work/src/b.ts', content: 'from b' }),
     });
@@ -160,6 +160,7 @@ describe('desktop history and recent files', () => {
     render(<App />);
 
     const select = await screen.findByLabelText('Recent changed file');
+    expect(within(select).getByRole('option', { name: 'b.ts — src' })).toHaveValue('/work/src/b.ts');
     await user.selectOptions(select, '/work/src/b.ts');
 
     expect(api.openRecentFile).toHaveBeenCalledWith('/work/src/b.ts');
@@ -170,7 +171,7 @@ describe('desktop history and recent files', () => {
   it('refreshes the recent list after a file is opened with the dialog', async () => {
     const listRecentFiles = vi.fn<() => Promise<RecentFile[]>>()
       .mockResolvedValueOnce([])
-      .mockResolvedValue([{ path: '/work/new.txt', openedAt: 1 }]);
+      .mockResolvedValue([{ path: '/work/new.txt', openedAt: 1, label: 'new.txt — work' }]);
     installApi({
       listRecentFiles,
       openFile: vi.fn().mockResolvedValue({ path: '/work/new.txt', content: 'opened' }),

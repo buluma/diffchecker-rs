@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { DiffOptions } from '../types/diff';
 import type { RecentFile } from '../types/history';
-import { describeRecentFile } from '../utils/history';
 import { SUPPORTED_LANGUAGES } from '../utils/highlight';
 
 interface ToolbarProps {
@@ -93,7 +92,7 @@ export function Toolbar({
       >
         <option value="">Recent…</option>
         {recentFiles.map(file => (
-          <option key={file.path} value={file.path} title={file.path}>{describeRecentFile(file.path)}</option>
+          <option key={file.path} value={file.path} title={file.path}>{file.label}</option>
         ))}
       </select>
     );

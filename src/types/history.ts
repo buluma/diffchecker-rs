@@ -9,11 +9,14 @@ export interface HistoryEntry {
   createdAt: number;
   original: HistorySide;
   changed: HistorySide;
+  originalLabel: string;
+  changedLabel: string;
 }
 
 export interface RecentFile {
   path: string;
   openedAt: number;
+  label: string;
 }
 
 export interface HistoryAddResult {
