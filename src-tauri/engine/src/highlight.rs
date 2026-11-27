@@ -98,7 +98,7 @@ pub fn highlight_code(code: &str, language: &str) -> Result<String, String> {
         .get("base16-ocean.dark")
         .or_else(|| THEME_SET.themes.get("InspiredGitHub"))
         .or_else(|| THEME_SET.themes.get("Monokai"))
-        .unwrap_or_else(|| &THEME_SET.themes.values().next().unwrap());
+        .unwrap_or_else(|| THEME_SET.themes.values().next().unwrap());
 
     let mut highlighter = HighlightLines::new(syntax, theme);
 
@@ -138,7 +138,7 @@ pub fn highlight_code_inline(code: &str, language: &str) -> Result<String, Strin
         .get("base16-ocean.dark")
         .or_else(|| THEME_SET.themes.get("InspiredGitHub"))
         .or_else(|| THEME_SET.themes.get("Monokai"))
-        .unwrap_or_else(|| &THEME_SET.themes.values().next().unwrap());
+        .unwrap_or_else(|| THEME_SET.themes.values().next().unwrap());
 
     let mut highlighter = HighlightLines::new(syntax, theme);
 
