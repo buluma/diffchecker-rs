@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import type { DiffResult, DiffOptions, FileContent } from '../types/diff';
-import { filterDiffLines } from '../utils/diff';
+import type { DiffLine, DiffResult, DiffOptions, FileContent } from '../types/diff';
 import { detectLanguageFromPath, detectLanguageFromContent } from '../utils/language';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
 import { MAX_INPUT_BYTES, getInputLimitError } from '../utils/limits';
@@ -14,6 +13,8 @@ async function detectLanguage(path: string | null, content: string): Promise<str
     : detectLanguageFromContent(content);
 }
 
+const EMPTY_LINES: DiffLine[] = [];
+
 export function useDiff() {
   const [originalFile, setOriginalFile] = useState<FileContent>({
     path: null,
@@ -26,7 +27,9 @@ export function useDiff() {
     language: 'plaintext',
   });
   const [options, setOptions] = useState<DiffOptions>(DEFAULT_DIFF_OPTIONS);
-  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
+  const [comparison, setComparison] = useState<{ result: DiffResult; filteredLines: DiffLine[] } | null>(null);
+  const diffResult = comparison?.result ?? null;
+  const filteredLines = comparison?.filteredLines ?? EMPTY_LINES;
   const [isComputing, setIsComputing] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
   const [comparisonWarning, setComparisonWarning] = useState<string | null>(null);
@@ -49,7 +52,7 @@ export function useDiff() {
     const timeoutId = setTimeout(async () => {
       if (!isComparing || (!originalFile.content && !changedFile.content)) {
         hasResultRef.current = false;
-        setDiffResult(null);
+        setComparison(null);
         setIsComputing(false);
         setComparisonWarning(null);
         return;
@@ -60,14 +63,14 @@ export function useDiff() {
       setComparisonWarning(null);
       const requestId = ++requestIdRef.current;
 
-      const finish = (result?: DiffResult, error?: string) => {
+      const finish = (comparison?: { result: DiffResult; filteredLines: DiffLine[] }, error?: string) => {
         if (cancelled || requestId !== requestIdRef.current) return;
-        if (result) {
+        if (comparison) {
           hasResultRef.current = true;
-          setDiffResult(result);
-          setComparisonWarning(result.warning ?? null);
+          setComparison(comparison);
+          setComparisonWarning(comparison.result.warning ?? null);
         } else {
-          setDiffResult(null);
+          setComparison(null);
           setComparisonWarning(null);
           setInputError(error ?? 'The comparison could not be completed.');
         }
@@ -75,20 +78,26 @@ export function useDiff() {
       };
 
       try {
-        let result: DiffResult;
         if (isTauri()) {
           // Use Rust backend via Tauri
-          result = await invoke('compute_diff_cmd', {
+          const result = await invoke<DiffResult>('compute_diff_cmd', {
             original: originalFile.content,
             changed: changedFile.content,
             options,
           });
+          if (cancelled) return;
+          let filteredLines = result.lines;
+          if (options.hideUnchangedLines) {
+            const indices = await invoke<number[]>('filter_diff_indices_cmd', { lines: result.lines, options });
+            filteredLines = indices.map(index => result.lines[index]);
+          }
+          finish({ result, filteredLines });
         } else {
           // Fallback for web - use TypeScript implementation
-          const { computeDiff } = await import('../utils/diff');
-          result = computeDiff(originalFile.content, changedFile.content, options);
+          const { computeDiff, filterDiffLines } = await import('../utils/diff');
+          const result = computeDiff(originalFile.content, changedFile.content, options);
+          finish({ result, filteredLines: filterDiffLines(result.lines, options) });
         }
-        if (!cancelled) finish(result);
       } catch (error) {
         if (!cancelled) finish(undefined, error instanceof Error ? error.message : String(error));
       }
@@ -99,24 +108,6 @@ export function useDiff() {
       clearTimeout(timeoutId);
     };
   }, [isComparing, originalFile.content, changedFile.content, options]);
-
-  const [desktopFilter, setDesktopFilter] = useState<{ lines: DiffResult['lines']; options: DiffOptions; indices: number[] }>();
-  useEffect(() => {
-    if (!isTauri() || !diffResult) return;
-    let cancelled = false;
-    void invoke<number[]>('filter_diff_indices_cmd', { lines: diffResult.lines, options })
-      .then(indices => { if (!cancelled) setDesktopFilter({ lines: diffResult.lines, options, indices }); })
-      .catch(() => { if (!cancelled) setDesktopFilter(undefined); });
-    return () => { cancelled = true; };
-  }, [diffResult, options]);
-
-  const filteredLines = useMemo(() => {
-    if (!diffResult) return [];
-    if (desktopFilter?.lines === diffResult.lines && desktopFilter.options === options) {
-      return desktopFilter.indices.map(index => diffResult.lines[index]);
-    }
-    return filterDiffLines(diffResult.lines, options);
-  }, [diffResult, options, desktopFilter]);
 
   const updateSide = useCallback((side: 'original' | 'changed', content: string, path: string | null) => {
     const error = getInputLimitError(content);
@@ -198,7 +189,7 @@ export function useDiff() {
     setLanguageOverride(null);
     setOriginalFile({ path: null, content: '', language: 'plaintext' });
     setChangedFile({ path: null, content: '', language: 'plaintext' });
-    setDiffResult(null);
+    setComparison(null);
     setInputError(null);
     setComparisonWarning(null);
   }, []);
