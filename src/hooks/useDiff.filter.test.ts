@@ -35,10 +35,12 @@ describe('desktop diff filtering', () => {
     });
     const result = startComparison();
 
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith('filter_diff_indices_cmd', expect.anything()));
+    await waitFor(() => {
+      expect(invoke).toHaveBeenCalledWith('filter_diff_indices_cmd', expect.anything());
+      expect(result.current.isComputing).toBe(true);
+    });
     expect(result.current.diffResult).toBeNull();
     expect(result.current.filteredLines).toEqual([]);
-    expect(result.current.isComputing).toBe(true);
 
     await act(async () => resolveFilter([2, 4]));
     expect(result.current.filteredLines).toEqual([comparison.lines[2], comparison.lines[4]]);
