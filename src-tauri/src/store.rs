@@ -91,7 +91,7 @@ fn now_ms() -> u64 {
 }
 
 fn validate_side(side: &HistorySide) -> Result<(), String> {
-    if side.content.as_bytes().len() > MAX_SIDE_BYTES {
+    if side.content.len() > MAX_SIDE_BYTES {
         return Err("too-large".to_owned());
     }
     if side

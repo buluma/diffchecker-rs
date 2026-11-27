@@ -137,10 +137,10 @@ pub fn detect_language_from_path(file_path: Option<&str>) -> String {
     // Get filename from path
     let filename = file_path
         .split('/')
-        .last()
+        .next_back()
         .unwrap_or(file_path)
         .split('\\')
-        .last()
+        .next_back()
         .unwrap_or(file_path);
 
     // Check exact filename matches first
@@ -149,7 +149,7 @@ pub fn detect_language_from_path(file_path: Option<&str>) -> String {
     }
 
     // Check extension
-    let ext = filename.split('.').last().unwrap_or("").to_lowercase();
+    let ext = filename.split('.').next_back().unwrap_or("").to_lowercase();
 
     if let Some(lang) = EXTENSION_LANGUAGE_MAP.get(&ext) {
         return lang.to_string();
@@ -163,7 +163,7 @@ pub fn detect_language_from_content(content: &str) -> String {
     // Shebang detection
     if let Some(shebang_match) = content.lines().next() {
         if let Some(rest) = shebang_match.strip_prefix("#!") {
-            let interpreter = rest.trim().split('/').last().unwrap_or("");
+            let interpreter = rest.trim().split('/').next_back().unwrap_or("");
             match interpreter {
                 i if i.contains("python") => return "python".to_string(),
                 i if i.contains("node") => return "javascript".to_string(),
@@ -189,10 +189,10 @@ pub fn detect_language_from_content(content: &str) -> String {
     }
 
     // JSON detection
-    if trimmed.starts_with('{') || trimmed.starts_with('[') {
-        if serde_json::from_str::<serde_json::Value>(content).is_ok() {
-            return "json".to_string();
-        }
+    if (trimmed.starts_with('{') || trimmed.starts_with('['))
+        && serde_json::from_str::<serde_json::Value>(content).is_ok()
+    {
+        return "json".to_string();
     }
 
     // YAML detection (simple heuristic)
