@@ -459,34 +459,31 @@ fn align_gap(
 }
 
 /// Filters diff lines based on options (e.g., hide unchanged)
-pub fn filter_diff_lines(lines: &[DiffLine], options: &DiffOptions) -> Vec<DiffLine> {
+pub fn filter_diff_indices(lines: &[DiffLine], options: &DiffOptions) -> Vec<usize> {
     if !options.hide_unchanged_lines {
-        return lines.to_vec();
+        return (0..lines.len()).collect();
     }
 
     const CONTEXT: usize = 3;
-    let mut visible_indexes = std::collections::HashSet::new();
-
+    let mut visible = vec![false; lines.len()];
     for (index, line) in lines.iter().enumerate() {
         if line.r#type != DiffType::Equal {
-            let start = index.saturating_sub(CONTEXT);
             let end = (index + CONTEXT).min(lines.len() - 1);
-            for context_index in start..=end {
-                visible_indexes.insert(context_index);
-            }
+            visible[index.saturating_sub(CONTEXT)..=end].fill(true);
         }
     }
 
-    lines
-        .iter()
+    visible
+        .into_iter()
         .enumerate()
-        .filter_map(|(index, line)| {
-            if visible_indexes.contains(&index) {
-                Some(line.clone())
-            } else {
-                None
-            }
-        })
+        .filter_map(|(index, value)| value.then_some(index))
+        .collect()
+}
+
+pub fn filter_diff_lines(lines: &[DiffLine], options: &DiffOptions) -> Vec<DiffLine> {
+    filter_diff_indices(lines, options)
+        .into_iter()
+        .map(|index| lines[index].clone())
         .collect()
 }
 
@@ -773,7 +770,7 @@ mod tests {
     #[test]
     fn shared_browser_and_desktop_fixtures() {
         let fixtures: serde_json::Value =
-            serde_json::from_str(include_str!("../../src/utils/diff-parity-fixtures.json"))
+            serde_json::from_str(include_str!("../../../src/utils/diff-parity-fixtures.json"))
                 .unwrap();
         for fixture in fixtures.as_array().unwrap() {
             let mut options = default_options();

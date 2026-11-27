@@ -10,8 +10,8 @@ import { useDiff } from '../hooks/useDiff';
 import { useLocalData } from '../hooks/useLocalData';
 import type { DiffLine } from '../types/diff';
 import type { HistoryEntry } from '../types/history';
-import { buildMergedContent, type MergeChoice } from '../utils/merge';
-import { buildSideBySideOutput, buildUnifiedOutput } from '../utils/export';
+import { runBrowser } from '../platform/browser';
+import type { MergeChoice } from '../platform/browserProtocol';
 import '../App.css';
 
 export function App() {
@@ -72,11 +72,10 @@ export function App() {
   const updateMergedContent = useCallback((lines: DiffLine[], choices: Record<number, MergeChoice>) => {
     const request = ++mergeRequestRef.current;
     const api = getDesktopAPI();
-    if (!api) {
-      setMergedContent(buildMergedContent(lines, choices));
-      return;
-    }
-    void api.buildMergedContent(lines, choices).then(content => {
+    const merge = api
+      ? api.buildMergedContent(lines, choices)
+      : runBrowser('merge', lines, Object.entries(choices).map(([index, choice]) => [Number(index), choice]));
+    void merge.then(content => {
       if (request === mergeRequestRef.current) setMergedContent(content);
     }).catch(error => {
       if (request === mergeRequestRef.current) reportInputError(String(error));
@@ -101,7 +100,7 @@ export function App() {
       try {
         const content = mergeMode ? mergedContent : isTauri()
           ? await invoke<string>('format_diff_cmd', { lines: filteredLines, mode: options.viewMode })
-          : options.viewMode === 'unified' ? buildUnifiedOutput(filteredLines) : buildSideBySideOutput(filteredLines);
+          : await runBrowser('export', filteredLines, options.viewMode);
         await desktopAPI.saveFile(content, suggestedName);
       } catch (error) {
         reportInputError(error instanceof Error ? error.message : String(error));

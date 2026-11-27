@@ -19,15 +19,13 @@ and Linux.
 - In the desktop app, reopen recent files and restore previous comparisons from
   local history.
 
-Each input is limited to 5 MiB and 10,000 lines. The desktop app computes diffs
-in Rust and the browser fallback runs the TypeScript implementation on the main
-thread; highly dissimilar inputs use bounded simplified alignment and show a
-warning. History stores inputs up to 1 MiB per side.
+Each input is limited to 5 MiB and 10,000 lines. Desktop and browser comparisons use the same Rust engine. The browser runs it locally in a Web Worker using WebAssembly. Highly dissimilar inputs use bounded simplified alignment and show a warning. History stores inputs up to 1 MiB per side.
 
 ## Requirements
 
 - Bun version from `.bun-version`
-- Rust toolchain for the Tauri desktop app
+- Rust toolchain for the Tauri desktop app or browser engine
+- Browser development, browser builds, and renderer tests also need the `wasm32-unknown-unknown` Rust target and `wasm-bindgen-cli` 0.2.130
 - Debian or Ubuntu system libraries for Linux desktop builds:
 
   ```sh
@@ -43,9 +41,11 @@ Install dependencies:
 bun install
 ```
 
-Start the web renderer:
+Set up the browser engine tools and start the web renderer:
 
 ```sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.130 --locked
 bun run dev
 ```
 
@@ -55,17 +55,15 @@ Start Vite and the Tauri desktop app together:
 bun run dev:desktop
 ```
 
-The renderer also has a browser fallback for editing, comparing, and loading
-files. Recent files, comparison history, settings, and native file dialogs are
-provided by the Rust desktop backend.
+The browser renderer supports editing, comparing, and loading files. Recent files, comparison history, settings, and native file dialogs are available in the desktop app.
 
 ## Build and validation
 
 ```sh
-bun run build          # Type-check and build the renderer
-bun run build:desktop # Build the renderer and package the desktop app
+bun run build          # Compile the browser engine, type-check and build the renderer
+bun run build:desktop  # Build and package the desktop app
 bun run lint           # Type-check and lint the renderer and build configuration
-bun run test           # Run Vitest
+bun run test           # Compile the browser engine and run Vitest
 ```
 
 Tauri bundles installers under `src-tauri/target/release/bundle/`. Releases
@@ -113,8 +111,7 @@ direct filesystem access.
 - `src/hooks/` — comparison and desktop-local state.
 - `src/platform/` — the bridge that routes desktop commands, files, and local
   data to Tauri.
-- `src/utils/` — diff calculation, merge construction, syntax/language helpers,
-  history, and export formatting.
+- `src-tauri/engine/` — shared Rust processing and its WebAssembly entry point.
 - `src/types/` — shared comparison and history types.
 - `src-tauri/` — Tauri shell, native dialogs, Rust commands, and local data
   store.

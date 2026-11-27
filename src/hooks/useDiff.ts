@@ -1,16 +1,14 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { DiffLine, DiffResult, DiffOptions, FileContent } from '../types/diff';
-import { detectLanguageFromPath, detectLanguageFromContent } from '../utils/language';
+import { runBrowser } from '../platform/browser';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
-import { MAX_INPUT_BYTES, getInputLimitError, validateInputDesktop } from '../utils/limits';
+import { MAX_INPUT_BYTES, getInputLimitError, validateInput } from '../utils/limits';
 import { getDesktopAPI } from '../platform/desktop';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
 async function detectLanguage(path: string | null, content: string): Promise<string> {
   const api = getDesktopAPI();
-  return api ? api.detectLanguage(path, content) : path
-    ? detectLanguageFromPath(path)
-    : detectLanguageFromContent(content);
+  return api ? api.detectLanguage(path, content) : runBrowser('detectLanguage', path, content);
 }
 
 const EMPTY_LINES: DiffLine[] = [];
@@ -94,10 +92,9 @@ export function useDiff() {
           }
           finish({ result, filteredLines });
         } else {
-          // Fallback for web - use TypeScript implementation
-          const { computeDiff, filterDiffLines } = await import('../utils/diff');
-          const result = computeDiff(originalFile.content, changedFile.content, options);
-          finish({ result, filteredLines: filterDiffLines(result.lines, options) });
+          const { result, indices } = await runBrowser('compare', originalFile.content, changedFile.content, options);
+          const filteredLines = indices?.map(index => result.lines[index]) ?? result.lines;
+          finish({ result, filteredLines });
         }
       } catch (error) {
         if (!cancelled) finish(undefined, error instanceof Error ? error.message : String(error));
@@ -183,7 +180,7 @@ export function useDiff() {
       && originalRevision === languageRequestRef.current.original
       && changedRevision === languageRequestRef.current.changed;
     try {
-      await Promise.all([validateInputDesktop(original.content), validateInputDesktop(changed.content)]);
+      await Promise.all([validateInput(original.content), validateInput(changed.content)]);
       if (!isCurrent()) return;
       setSideFile('original', original);
       setSideFile('changed', changed);
@@ -235,11 +232,12 @@ export function useDiff() {
             setInputError('Each input is limited to 5 MiB.');
             return;
           }
-          void file.text().then(content => {
-            const error = getInputLimitError(content);
-            if (error) setInputError(error);
-            else setSideFile(side, { path: file.name, content });
-          }).catch(() => setInputError(`Could not read ${file.name}.`));
+          void file.text().catch(() => {
+            throw new Error(`Could not read ${file.name}.`);
+          }).then(async content => {
+            await validateInput(content);
+            setSideFile(side, { path: file.name, content });
+          }).catch((error: Error) => setInputError(error.message));
         }
       };
       input.click();

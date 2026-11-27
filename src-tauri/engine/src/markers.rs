@@ -25,6 +25,25 @@ pub struct ChangeMarker {
     pub height: f64,
 }
 
+#[derive(serde::Deserialize)]
+pub struct MeasuredGroup {
+    types: Vec<DiffType>,
+    top: f64,
+    height: f64,
+}
+
+pub fn compute_markers(groups: Vec<MeasuredGroup>, scroll_height: f64) -> Vec<ChangeMarker> {
+    let groups: Vec<GroupPosition> = groups
+        .into_iter()
+        .map(|group| GroupPosition {
+            kind: group_kind(&group.types),
+            top: group.top,
+            height: group.height,
+        })
+        .collect();
+    to_markers(&groups, scroll_height)
+}
+
 pub fn group_kind(types: &[DiffType]) -> MarkerKind {
     if types.iter().all(|t| *t == DiffType::Added) {
         MarkerKind::Added

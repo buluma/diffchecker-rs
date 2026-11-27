@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeDiff, DiffLimitError, filterDiffLines } from './diff';
+import { computeDiff, runWasm } from '../test/wasm';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
 
 function referenceLcsLength(a: string[], b: string[]): number {
@@ -35,7 +35,7 @@ describe('computeDiff', () => {
   it('rejects inputs beyond the configured line limit', () => {
     const tooManyLines = Array(10_001).fill('line').join('\n');
 
-    expect(() => computeDiff(tooManyLines, 'line', DEFAULT_DIFF_OPTIONS)).toThrow(DiffLimitError);
+    expect(() => computeDiff(tooManyLines, 'line', DEFAULT_DIFF_OPTIONS)).toThrow(/limited to 10000 lines/);
   });
 
   it('bounds highly dissimilar inputs with a simplified alignment warning', () => {
@@ -149,7 +149,7 @@ describe('computeDiff', () => {
 
     expect(result.lines).toHaveLength(1);
     expect(result.lines[0]).toMatchObject({ type: 'modified', originalContent: `${long}a` });
-    expect(result.lines[0].charDiffs).toBeNull();
+    expect(result.lines[0].charDiffs ?? null).toBeNull();
   });
 
   it('recognizes lines as equal after ignored normalization', () => {
@@ -176,16 +176,13 @@ describe('computeDiff', () => {
 
 describe('filterDiffLines', () => {
   it('keeps three lines of context around a change', () => {
-    const result = computeDiff(
+    const { result, indices } = runWasm(
+      'compare',
       'line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8',
       'line 1\nline 2\nline 3\nline X\nline 5\nline 6\nline 7\nline 8',
-      DEFAULT_DIFF_OPTIONS,
+      { ...DEFAULT_DIFF_OPTIONS, hideUnchangedLines: true },
     );
-
-    const filtered = filterDiffLines(result.lines, {
-      ...DEFAULT_DIFF_OPTIONS,
-      hideUnchangedLines: true,
-    });
+    const filtered = indices!.map(index => result.lines[index]);
 
     expect(filtered.map(line => line.content)).toEqual([
       'line 1', 'line 2', 'line 3', 'line X', 'line 5', 'line 6', 'line 7',

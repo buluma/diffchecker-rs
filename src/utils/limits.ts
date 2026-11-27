@@ -1,4 +1,5 @@
 import { getDesktopAPI } from '../platform/desktop';
+import { runBrowser } from '../platform/browser';
 
 export const MAX_INPUT_BYTES = 5 * 1024 * 1024;
 export const MAX_INPUT_LINES = 10_000;
@@ -18,7 +19,7 @@ export function getInputLimitError(content: string): string | null {
   return null;
 }
 
-export async function validateInputDesktop(content: string): Promise<void> {
+export async function validateInput(content: string): Promise<void> {
   const api = getDesktopAPI();
   if (api) {
     try {
@@ -30,6 +31,5 @@ export async function validateInputDesktop(content: string): Promise<void> {
       throw new Error(message);
     }
   }
-  const error = getInputLimitError(content);
-  if (error) throw new Error(error);
+  await runBrowser('validate', content);
 }

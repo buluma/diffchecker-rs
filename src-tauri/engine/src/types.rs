@@ -3,7 +3,7 @@ use ts_rs::TS;
 
 /// Represents a single line in the diff output
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DiffLine {
     #[ts(type = "DiffType")]
@@ -24,7 +24,7 @@ pub struct DiffLine {
 
 /// Type of diff line
 #[derive(Clone, Debug, Serialize, Deserialize, TS, PartialEq, Eq)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum DiffType {
     Equal,
@@ -35,7 +35,7 @@ pub enum DiffType {
 
 /// Character-level diff for inline highlighting
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct CharDiff {
     pub r#type: CharDiffType,
@@ -44,7 +44,7 @@ pub struct CharDiff {
 
 /// Type of character diff
 #[derive(Clone, Debug, Serialize, Deserialize, TS, PartialEq, Eq)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum CharDiffType {
     Equal,
@@ -54,7 +54,7 @@ pub enum CharDiffType {
 
 /// Options for diff computation
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DiffOptions {
     pub precision: DiffPrecision,
@@ -68,7 +68,7 @@ pub struct DiffOptions {
 
 /// Precision mode for inline diff
 #[derive(Clone, Debug, Serialize, Deserialize, TS, PartialEq, Eq)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum DiffPrecision {
     Smart,
@@ -78,7 +78,7 @@ pub enum DiffPrecision {
 
 /// View mode for diff display
 #[derive(Clone, Debug, Serialize, Deserialize, TS, PartialEq, Eq)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "kebab-case")]
 pub enum DiffViewMode {
     SideBySide,
@@ -101,7 +101,7 @@ impl Default for DiffOptions {
 
 /// Default diff options constant for TypeScript
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultDiffOptions {
     pub precision: DiffPrecision,
@@ -129,7 +129,7 @@ impl Default for DefaultDiffOptions {
 
 /// Result of diff computation
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DiffResult {
     pub lines: Vec<DiffLine>,
@@ -141,7 +141,7 @@ pub struct DiffResult {
 
 /// Statistics about the diff
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DiffStats {
     pub added: usize,
@@ -152,7 +152,7 @@ pub struct DiffStats {
 
 /// File content for editor
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct FileContent {
     pub path: Option<String>,
@@ -162,7 +162,7 @@ pub struct FileContent {
 
 /// Error for diff limits
 #[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../src/types/diff-generated.ts")]
+#[ts(export, export_to = "../../../src/types/diff-generated.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct DiffLimitError {
     pub message: String,
