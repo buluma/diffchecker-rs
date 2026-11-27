@@ -6,14 +6,18 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@diffchecker/wasm': path.resolve(__dirname, mode === 'desktop'
+        ? 'src/platform/desktopWasm.ts'
+        : 'src/platform/wasm/diffchecker_engine.js'),
     },
   },
   base: './',
+  worker: { format: 'es' },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -26,4 +30,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
   },
-})
+}))

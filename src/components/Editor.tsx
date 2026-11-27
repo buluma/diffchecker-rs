@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import type { FileContent } from '../types/diff';
 import { useHighlightedLines } from '../hooks/useHighlightedLines';
-import { MAX_INPUT_BYTES, validateInputDesktop } from '../utils/limits';
+import { MAX_INPUT_BYTES, validateInput } from '../utils/limits';
 
 interface EditorProps {
   file: FileContent;
@@ -105,7 +105,7 @@ export function Editor({
           onError?.(`Could not read ${file.name}.`);
           return;
         }
-        void validateInputDesktop(content).then(() => {
+        void validateInput(content).then(() => {
           if (request === dropRequest.current) onChange(content, file.name);
         }).catch((error: Error) => {
           if (request === dropRequest.current) onError?.(error.message);

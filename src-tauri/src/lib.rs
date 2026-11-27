@@ -1,13 +1,8 @@
-pub mod diff;
-mod export;
-pub mod highlight;
 mod history;
-mod language;
-mod limits;
-pub mod markers;
-mod merge;
 mod store;
-pub mod types;
+
+pub use diffchecker_engine::{diff, highlight, markers, types};
+use diffchecker_engine::{export, language, limits, merge};
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -17,12 +12,12 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 
-use crate::diff::compute_diff;
+use crate::diff::{compute_diff, filter_diff_indices};
 use crate::highlight::highlight_code;
 use crate::history::{describe_recent_file, describe_side};
 use crate::language::{detect_language_from_content, detect_language_from_path};
 use crate::limits::{get_input_limit_error, MAX_INPUT_BYTES};
-use crate::markers::{group_kind, to_markers, ChangeMarker, GroupPosition};
+use crate::markers::{compute_markers, ChangeMarker, MeasuredGroup};
 use crate::merge::{build_merged_content, MergeChoice};
 use crate::store::{
     add_history_entry, add_recent_file, clear_history as clear_stored_history,
@@ -30,7 +25,7 @@ use crate::store::{
     list_recent_files as read_recent_files, remove_history_entry,
     set_save_history as write_save_history, HistoryEntry, HistorySide, RecentFile,
 };
-use crate::types::{DiffLimitError, DiffLine, DiffOptions, DiffResult, DiffType};
+use crate::types::{DiffLimitError, DiffLine, DiffOptions, DiffResult};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -269,23 +264,7 @@ async fn compute_diff_cmd(
 
 #[tauri::command]
 fn filter_diff_indices_cmd(lines: Vec<DiffLine>, options: DiffOptions) -> Vec<usize> {
-    let mut visible = vec![false; lines.len()];
-    if !options.hide_unchanged_lines {
-        return (0..lines.len()).collect();
-    }
-    for (index, line) in lines.iter().enumerate() {
-        if line.r#type != DiffType::Equal {
-            let end = (index + 3).min(lines.len() - 1);
-            for item in &mut visible[index.saturating_sub(3)..=end] {
-                *item = true;
-            }
-        }
-    }
-    visible
-        .iter()
-        .enumerate()
-        .filter_map(|(index, value)| value.then_some(index))
-        .collect()
+    filter_diff_indices(&lines, &options)
 }
 
 #[tauri::command]
@@ -329,27 +308,12 @@ async fn build_merged_content_cmd(
     Ok(build_merged_content(&lines, &choices))
 }
 
-#[derive(serde::Deserialize)]
-struct MeasuredGroup {
-    types: Vec<DiffType>,
-    top: f64,
-    height: f64,
-}
-
 #[tauri::command]
 async fn compute_markers_cmd(
     groups: Vec<MeasuredGroup>,
     scroll_height: f64,
 ) -> Result<Vec<ChangeMarker>, String> {
-    let groups: Vec<GroupPosition> = groups
-        .into_iter()
-        .map(|group| GroupPosition {
-            kind: group_kind(&group.types),
-            top: group.top,
-            height: group.height,
-        })
-        .collect();
-    Ok(to_markers(&groups, scroll_height))
+    Ok(compute_markers(groups, scroll_height))
 }
 
 #[tauri::command]

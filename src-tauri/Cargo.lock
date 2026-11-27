@@ -575,20 +575,31 @@ dependencies = [
 name = "diffchecker"
 version = "1.0.9"
 dependencies = [
- "once_cell",
- "phf 0.14.0",
- "regex",
+ "diffchecker-engine",
  "serde",
  "serde_json",
- "syntect",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
  "tempfile",
  "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "diffchecker-engine"
+version = "0.1.0"
+dependencies = [
+ "once_cell",
+ "phf 0.14.0",
+ "regex",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "syntect",
  "ts-rs",
  "two-face",
- "uuid",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -775,6 +786,17 @@ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "fancy-regex"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "998b056554fbe42e03ae0e152895cd1a7e1002aec800fdc6635d20270260c46f"
+dependencies = [
+ "bit-set",
+ "regex-automata",
+ "regex-syntax",
 ]
 
 [[package]]
@@ -2780,6 +2802,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-wasm-bindgen"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8302e169f0eddcc139c70f139d19d6467353af16f9fce27e8c30158036a1e16b"
+dependencies = [
+ "js-sys",
+ "serde",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "serde_core"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3138,6 +3171,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "656b45c05d95a5704399aeef6bd0ddec7b2b3531b7c9e900abbf7c4d2190c925"
 dependencies = [
  "bincode",
+ "fancy-regex",
  "flate2",
  "fnv",
  "once_cell",

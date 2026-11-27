@@ -4,12 +4,15 @@
   "version": "1.0.9",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "bun run build:wasm && vite",
+    "dev:renderer:desktop": "vite --mode desktop",
+    "build:wasm": "bun scripts/build-wasm.ts",
+    "build": "bun run build:wasm && tsc -b && vite build",
+    "build:renderer:desktop": "tsc -b && vite build --mode desktop",
     "dev:desktop": "tauri dev",
     "build:desktop": "tauri build",
     "lint": "tsc -b --pretty false && oxlint",
-    "test": "vitest run",
+    "test": "bun run build:wasm && vitest run",
     "preview": "vite preview",
     "tauri:dev": "bun run dev:desktop",
     "tauri:build": "bun run build:desktop"

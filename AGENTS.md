@@ -8,6 +8,7 @@ Tauri v2 app with a Rust backend.
 - `src/` contains the renderer: `components/` for UI, `hooks/` for state,
   `platform/` for the Tauri command bridge, `utils/` for helpers, `types/` for
   shared types, and `assets/` for images/icons.
+- `src-tauri/engine/` contains the shared Rust diff engine used by the desktop commands and, compiled to WebAssembly, by the browser renderer.
 - `src-tauri/` contains the Tauri shell, native dialog integration, Rust
   commands, and local data store. Keep filesystem access and native dialogs in
   Rust; expose only narrowly scoped commands.
@@ -18,7 +19,7 @@ Tauri v2 app with a Rust backend.
 
 ## Build, Test, and Development Commands
 
-Run `bun install` after checkout.
+Run `bun install` after checkout. Browser development, builds, and renderer tests also need `rustup target add wasm32-unknown-unknown` and `cargo install wasm-bindgen-cli --version 0.2.130 --locked`.
 
 - `bun run dev` starts the Vite development server with hot reload.
 - `bun run dev:desktop` starts Vite and the Tauri shell together.
@@ -27,6 +28,7 @@ Run `bun install` after checkout.
 - `bun run build:desktop` builds the renderer and packages the desktop app
   through Tauri.
 - `bun run lint` runs renderer TypeScript checks and oxlint.
+- `bun run build:wasm` builds the browser engine into `src/platform/wasm/`; `bun run dev`, `bun run build`, and `bun run test` run it first.
 - `bun run test` runs the Vitest suite.
 - `cargo test --manifest-path src-tauri/Cargo.toml` runs the Rust test suite.
 - `bun run preview` serves the built renderer locally for inspection.

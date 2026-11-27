@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fixtureData from './diff-parity-fixtures.json';
-import { computeDiff } from './diff';
+import { computeDiff } from '../test/wasm';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
 
 const fixtures = fixtureData as Array<{

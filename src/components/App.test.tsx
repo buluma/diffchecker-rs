@@ -137,6 +137,7 @@ describe('App compare flow', () => {
     await user.paste('const a = 1;');
     expect(statusBar()).toHaveTextContent(/Original:.*plaintext.*Changed:.*plaintext/);
 
+    await screen.findByRole('option', { name: 'javascript' });
     await user.selectOptions(screen.getByLabelText(/^Syntax/), 'javascript');
     expect(statusBar()).toHaveTextContent(/Original:.*javascript.*Changed:.*javascript/);
 

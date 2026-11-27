@@ -4,9 +4,9 @@
   "version": "1.0.9",
   "identifier": "com.diffchecker.desktop",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "bun run dev:renderer:desktop",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "bun run build:renderer:desktop",
     "frontendDist": "../dist"
   },
   "app": {

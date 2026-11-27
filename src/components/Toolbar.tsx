@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { DiffOptions } from '../types/diff';
 import type { RecentFile } from '../types/history';
-import { SUPPORTED_LANGUAGES } from '../utils/highlight';
+import { runBrowser } from '../platform/browser';
 
 interface ToolbarProps {
   options: DiffOptions;
@@ -60,13 +60,12 @@ export function Toolbar({
   const [showIgnoreRules, setShowIgnoreRules] = useState(false);
   const [customIgnoreRules, setCustomIgnoreRules] = useState(options.customIgnoreRules.join('\n'));
 
-  const [languages, setLanguages] = useState(() => isTauri() ? [] : SUPPORTED_LANGUAGES);
+  const [languages, setLanguages] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!isTauri()) return;
     let cancelled = false;
-    void invoke<string[]>('highlight_languages_cmd')
-      .then(languages => { if (!cancelled) setLanguages(languages); })
+    const choices = isTauri() ? invoke<string[]>('highlight_languages_cmd') : runBrowser('languages');
+    void choices.then(languages => { if (!cancelled) setLanguages(languages); })
       .catch(() => { if (!cancelled) setLanguages([]); });
     return () => { cancelled = true; };
   }, []);

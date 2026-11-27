@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DiffView } from './DiffView';
-import { computeDiff } from '../utils/diff';
+import { computeDiff } from '../test/wasm';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: vi.fn(() => false), invoke: vi.fn() }));
@@ -188,10 +188,11 @@ describe('DiffView change markers', () => {
     changed: 'keep\nnew value\nkeep\nkeep\nkeep\nkeep\nkeep\nadded line',
   };
 
-  it('puts one marker per change where it sits in the scrollable area', () => {
+  it('puts one marker per change where it sits in the scrollable area', async () => {
     const restore = fakeLayout();
     try {
       const { container } = setup(text);
+      await screen.findByRole('button', { name: /go to change 1 of 3/i });
       const markers = container.querySelectorAll<HTMLElement>('.diff-marker');
 
       expect(markers).toHaveLength(3);
@@ -204,10 +205,11 @@ describe('DiffView change markers', () => {
     }
   });
 
-  it('colours each marker by the kind of change', () => {
+  it('colours each marker by the kind of change', async () => {
     const restore = fakeLayout();
     try {
       const { container } = setup(text);
+      await screen.findByRole('button', { name: /go to change 1 of 3/i });
       const markers = container.querySelectorAll('.diff-marker');
 
       expect(markers[0]).toHaveClass('diff-marker-modified');
@@ -224,7 +226,7 @@ describe('DiffView change markers', () => {
       const user = userEvent.setup();
       const { scroller } = setup(text);
 
-      await user.click(screen.getByRole('button', { name: /go to change 2 of 3/i }));
+      await user.click(await screen.findByRole('button', { name: /go to change 2 of 3/i }));
 
       expect(scroller.scrollTop).toBe(200);
       expect(screen.getByText('2 of 3')).toBeInTheDocument();
@@ -242,13 +244,13 @@ describe('DiffView change markers', () => {
 
       await user.click(screen.getByRole('button', { name: /next change/i }));
 
-      expect(container.querySelectorAll('.diff-marker')[0]).toHaveClass('diff-marker-active');
+      await waitFor(() => expect(container.querySelectorAll('.diff-marker')[0]).toHaveClass('diff-marker-active'));
     } finally {
       restore();
     }
   });
 
-  it('shows markers in the unified view too', () => {
+  it('shows markers in the unified view too', async () => {
     const restore = fakeLayout();
     try {
       const options = { ...DEFAULT_DIFF_OPTIONS, viewMode: 'unified' as const };
@@ -261,7 +263,7 @@ describe('DiffView change markers', () => {
         />,
       );
 
-      expect(container.querySelectorAll('.diff-marker')).toHaveLength(3);
+      await waitFor(() => expect(container.querySelectorAll('.diff-marker')).toHaveLength(3));
     } finally {
       restore();
     }

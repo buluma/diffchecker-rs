@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { useDiff } from './useDiff';
 import { DEFAULT_DIFF_OPTIONS } from '../types/diff';
-import { computeDiff } from '../utils/diff';
+import { computeDiff } from '../test/wasm';
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => true, invoke: vi.fn() }));
 

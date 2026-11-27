@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import type { DiffLine, DiffOptions } from '../types/diff';
 import { useHighlightedLines } from '../hooks/useHighlightedLines';
-import { groupKind, toMarkers, type ChangeMarker } from '../utils/markers';
+import type { ChangeMarker } from '../types/markers';
+import { runBrowser } from '../platform/browser';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
 interface DiffViewProps {
@@ -223,14 +224,11 @@ export function DiffView({
         }];
       });
       const current = ++request;
-      if (!isTauri()) {
-        setMarkers(toMarkers(positions.map(({ types, ...position }) => ({
-          ...position, kind: groupKind(types),
-        })), pane.scrollHeight));
-        return;
-      }
-
-      void invoke<ChangeMarker[]>('compute_markers_cmd', { groups: positions, scrollHeight: pane.scrollHeight })
+      const scrollHeight = pane.scrollHeight;
+      const calculated = isTauri()
+        ? invoke<ChangeMarker[]>('compute_markers_cmd', { groups: positions, scrollHeight })
+        : runBrowser('markers', positions, scrollHeight);
+      void calculated
         .catch(() => [])
         .then(result => { if (!disposed && current === request) setMarkers(result); });
     };

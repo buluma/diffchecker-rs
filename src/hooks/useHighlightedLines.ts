@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import { highlightCode } from '../utils/highlight';
+import { runBrowser } from '../platform/browser';
 
 const EMPTY_HIGHLIGHTS = new Map<string, string>();
 
-/** Batch desktop highlighting and discard results for older content. */
+/** Batch syntax highlighting and discard results for older content. */
 export function useHighlightedLines(lines: string[], language: string): Map<string, string> {
   const key = JSON.stringify(lines);
   const uniqueLines = useMemo(() => [...new Set(JSON.parse(key) as string[])], [key]);
   const [result, setResult] = useState<{ key: string; language: string; values: Map<string, string> }>();
 
   useEffect(() => {
-    if (!isTauri() || language === 'plaintext' || uniqueLines.length === 0) return;
+    if (language === 'plaintext' || uniqueLines.length === 0) return;
     let cancelled = false;
-    void invoke<string[]>('highlight_fragments_cmd', { lines: uniqueLines, language })
-      .then(values => {
+    const highlights = isTauri()
+      ? invoke<string[]>('highlight_fragments_cmd', { lines: uniqueLines, language })
+      : runBrowser('highlight', uniqueLines, language);
+    void highlights.then(values => {
         if (!cancelled) setResult({ key, language, values: new Map(uniqueLines.map((line, i) => [line, values[i]])) });
       }).catch(() => {
         // The renderer can still display the original text without highlighting.
@@ -23,10 +25,5 @@ export function useHighlightedLines(lines: string[], language: string): Map<stri
     return () => { cancelled = true; };
   }, [key, language, uniqueLines]);
 
-  return useMemo(() => {
-    if (isTauri()) {
-      return result?.key === key && result.language === language ? result.values : EMPTY_HIGHLIGHTS;
-    }
-    return new Map(uniqueLines.map(line => [line, highlightCode(line || ' ', language)]));
-  }, [key, language, result, uniqueLines]);
+  return result?.key === key && result.language === language ? result.values : EMPTY_HIGHLIGHTS;
 }
