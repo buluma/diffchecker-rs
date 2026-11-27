@@ -131,13 +131,17 @@ describe('desktop history and recent files', () => {
     });
     const user = userEvent.setup();
     render(<App />);
+    await user.click(originalEditor());
+    await user.paste('current left');
+    await user.click(changedEditor());
+    await user.paste('current right');
 
     await user.click(screen.getByRole('button', { name: /history/i }));
     await user.click(await screen.findByRole('button', { name: /restore/i }));
 
     expect(await screen.findByText('Invalid saved input.')).toBeInTheDocument();
-    expect(originalEditor()).toHaveValue('');
-    expect(changedEditor()).toHaveValue('');
+    expect(originalEditor()).toHaveValue('current left');
+    expect(changedEditor()).toHaveValue('current right');
   });
 
   it('lists saved comparisons, restores one and shows its diff', async () => {

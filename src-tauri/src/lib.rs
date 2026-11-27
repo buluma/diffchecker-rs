@@ -318,16 +318,6 @@ async fn compute_markers_cmd(
 }
 
 #[tauri::command]
-fn describe_recent_file_cmd(path: String) -> String {
-    describe_recent_file(&path)
-}
-
-#[tauri::command]
-fn describe_history_side_cmd(side: HistorySide) -> String {
-    describe_side(&side)
-}
-
-#[tauri::command]
 fn validate_input_cmd(content: &str) -> Result<(), DiffLimitError> {
     get_input_limit_error(content)
         .map(Err)
@@ -358,8 +348,6 @@ pub fn run() {
             detect_language_cmd,
             build_merged_content_cmd,
             compute_markers_cmd,
-            describe_recent_file_cmd,
-            describe_history_side_cmd,
             validate_input_cmd,
         ])
         .run(tauri::generate_context!())
