@@ -24,6 +24,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+          components: rustfmt
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
       - run: cargo install wasm-bindgen-cli --version 0.2.130 --locked
       - run: bun install --frozen-lockfile
       - run: bun run lint
