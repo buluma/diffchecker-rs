@@ -115,11 +115,13 @@ export function Editor({
   // Highlighted code for syntax highlighting display
   const highlightedLines = useMemo(() => {
     return visibleLines.map((line, i) => {
-      const html = highlighted.get(line) ?? ' ';
+      const html = highlighted.get(line);
       const isHighlighted = highlightLine === start + i + 1;
       return (
         <div key={i} className={`highlighted-line ${isHighlighted ? 'highlighted' : ''}`}>
-          <span className="line-content" dangerouslySetInnerHTML={{ __html: html }} />
+          {html === undefined
+            ? <span className="line-content">{line || ' '}</span>
+            : <span className="line-content" dangerouslySetInnerHTML={{ __html: html }} />}
         </div>
       );
     });
